@@ -24,7 +24,8 @@ class DocIndex(fname: String){
 
   /* docID -> list of tokens and freqencies */
   val fwIndex: Map[String, Map[String, Int]] =
-    tipster.stream.take(30000)
+    tipster.stream
+//           .take(30000)
            .map{
 //             var count = 0
              doc => {
