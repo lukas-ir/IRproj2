@@ -1,59 +1,68 @@
-import ch.ethz.dal.tinyir.processing.{StopWords}
+import ch.ethz.dal.tinyir.processing.{StopWords, XMLDocument}
 import ch.ethz.dal.tinyir.io.TipsterStream
 import com.github.aztek.porterstemmer.PorterStemmer
 
+import collection.mutable
 
-class DocIndex(fname: String){
+case class TfTuple(term: String, doc : String, count: Int)
 
-  private case class TfTuple(term: String, doc: String, count: Int)
-
-  /* Tokenize one document's content */
-  private def tokenizer(content: String) : List[String] = {
-    val minlength = 3
+object Tokenizer {
+  def tokenize(content: String) = {
     val tokens = content.toLowerCase()
                         .replaceAll("[^a-z ]", " ")
                         .split(" ")
-                        .filter(_.length()>minlength)
+                        .filter(_.length > 3)
 
     StopWords.filterOutSW(tokens)
-             .map(PorterStemmer.stem(_))
-             .toList
+             .map(PorterStemmer.stem)
+
+  }
+}
+
+class DocIndex(fname: String){
+
+  private val filename = fname
+
+  def tkstream(in: TipsterStream) = {
+    var count = 0
+    in.stream.map(
+      doc => {
+        count += 1
+        println(count)
+        (doc.name, Tokenizer.tokenize(doc.content).groupBy(identity)
+                                         .mapValues(_.length))
+      }
+    )
   }
 
-  private val tipster = new TipsterStream(fname)
+  private def TfStream : Stream[TfTuple] = {
+    var count = 0
+    val in = new TipsterStream(filename)
+    in.stream.flatMap{ doc =>
+      {
+        println(count)
+        count += 1
+        Tokenizer.tokenize(doc.content).groupBy(identity)
+          .map(tkfq => TfTuple(tkfq._1.intern(), doc.name.intern(), tkfq._2.length))
 
-  /* docID -> list of tokens and freqencies */
-  val fwIndex: Map[String, Map[String, Int]] =
-    tipster.stream
-//           .take(30000)
-           .map{
-//             var count = 0
-             doc => {
-//               count += 1
-//               println(count)
-               (doc.name, tokenizer(doc.content))
-             }
-           }
-           .toMap
-           .mapValues{_.groupBy(identity).mapValues(_.length)}
+      }
+    }
+  }
+
 
 
   /* token -> list of docID containing this token and its frequency */
-  val fqIndex : Map[String, List[(String, Int)]] = {
-//    var count = 0
-    fwIndex
-      .toList
-      .flatMap{
-        case (docid, tksfeq) => {
-//          count += 1
-//          println(count)
-          tksfeq.map(tkfq => (tkfq._1, tkfq._2, docid))
-        }
-      }
-      .groupBy(_._1)
-      .mapValues(_.map(d => (d._3, d._2)))
+  lazy val fqIndex : Map[String, List[(String, Int)]] = {
+    val map = mutable.Map[String, mutable.ListBuffer[(String, Int)]]()
+    for (tftuple <- TfStream) {
+      map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(String, Int)]())
+      map(tftuple.term) += ((tftuple.doc, tftuple.count))
+    }
+    map
+       .filter(_._2.size > 1) // choose terms appear in at least two docs
+       .mapValues(_.toList.sorted)
+       .toMap
   }
-
 }
 
 object test {
@@ -61,10 +70,9 @@ object test {
     val fname = "./data/documents"
     val docs = new DocIndex(fname)
 
-    val fwindex = docs.fqIndex
-    for (i <- fwindex) {
+    for (i <-  docs.fqIndex) {
       println(i)
     }
-    print(fwindex.size)
+    print( docs.fqIndex.size)
   }
 }
