@@ -1,5 +1,4 @@
 
-import ch.ethz.dal.tinyir.io.ZipStream
 import ch.ethz.dal.tinyir.io.TipsterStream
 
 object Proj2 {
