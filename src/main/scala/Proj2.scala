@@ -24,8 +24,11 @@ object Proj2 {
 
     val index = new DocIndex(path)
     val lm = new LanguageModel(index)
-    lm.predict("Airbus Subsidies")
-
+    val ret = lm.predict("Prime (Lending) Rate Moves, Predictions")
+    println("size=",ret.size)
+    for (i <- ret.filter(_._2 != 0.0).sortBy(- _._2).take(100)){
+      println(i)
+    }
 
 
   }

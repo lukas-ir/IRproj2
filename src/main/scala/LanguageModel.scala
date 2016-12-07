@@ -21,11 +21,6 @@ class LanguageModel(index: DocIndex) {
       case (doc,_) => (doc.intern(), predictOneDoc(doc, querytoken))
     }
 
-    for (i <- likelihood.filter(_._2 != 0.0).toList.sortBy(- _._2).take(100)){
-      println(i)
-    }
-
-
     likelihood.filter(_._2 != 0.0).toList.sortBy(- _._2).take(100)
   }
 }

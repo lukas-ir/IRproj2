@@ -40,11 +40,12 @@ class DocIndex(filename: String){
     val map = mutable.Map[String, mutable.ListBuffer[(String, Int)]]()
     for (tftuple <- TfStream) {
       map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(String, Int)]())
-      map(tftuple.term) += ((tftuple.doc, tftuple.count))
+      map(tftuple.term) += ((tftuple.doc.intern(), tftuple.count))
     }
     map
        .filter(_._2.size > 2) // choose terms appear in at least 3 docs
-       .mapValues(_.toList.sorted)
+       .filter(_._2.size < 4000) // choose terms appear less than 4000 docs
+       .mapValues(_.toList)
        .toMap
   }
 
@@ -58,7 +59,7 @@ class DocIndex(filename: String){
       }
     }
     map
-        .mapValues(_.toList.sorted )
+        .mapValues(_.toList )
       .toMap
   }
 
@@ -75,7 +76,7 @@ class DocIndex(filename: String){
   lazy val vocab = fqIndex.keySet.toList
 }
 
-object test {
+object DocIndexTest {
   def main(args: Array[String]): Unit = {
     val fname = "./data/documents"
     val docs = new DocIndex(fname)
@@ -94,9 +95,9 @@ object test {
 //
 //    println( docs.fqIndex.size)
     val dist = docs.fqIndex.mapValues(_.size).groupBy(_._2).mapValues(_.map(_._1))
-    for (i <- dist.keySet.toList.sorted) {
+    for (term <- dist.keySet.toList.sorted) {
 
-      println(i, dist(i).size, dist(i))
+      println(term, dist(term).size, dist(term))
     }
   }
 }
