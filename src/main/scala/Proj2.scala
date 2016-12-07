@@ -1,21 +1,32 @@
+import java.io.{BufferedInputStream, FileInputStream, InputStream}
 
-import ch.ethz.dal.tinyir.io.TipsterStream
+import ch.ethz.dal.tinyir.processing.{TipsterParse, XMLDocument}
+
+
+class QueryParse(is: InputStream) extends XMLDocument(is) {
+  override def title  : String = ""
+  override def body   : String = read(doc.getElementsByTagName("TEXT"))
+  override def name   : String = read(doc.getElementsByTagName("DOCNO")).filter(_.isLetterOrDigit)
+  override def date   : String = ""
+  override def content: String = body
+  def top: String = read(doc.getElementsByTagName("top"))
+}
 
 object Proj2 {
   def main(args: Array[String]): Unit = {
     val path = "./data/documents"
-    val docs = new TipsterStream(path)
-    println(docs.length)
+    val qureypath = "./data/questions-descriptions.txt"
 
-    println("Number of files in zips = " + docs.length)
+//    val unparsed = new BufferedInputStream(new FileInputStream(qureypath))
+//    val query = new QueryParse(unparsed)
 
-    var length: Long = 0
-    var tokens: Long = 0
-    for (doc <- docs.stream.take(10000)) {
-      length += doc.content.length
-      tokens += doc.tokens.length
-    }
-    println("Final number of characters = " + length)
-    println("Final number of tokens     = " + tokens)
+//    println(query.top)
+
+    val index = new DocIndex(path)
+    val lm = new LanguageModel(index)
+    lm.predict("Airbus Subsidies")
+
+
+
   }
 }

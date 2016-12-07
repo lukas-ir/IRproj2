@@ -19,22 +19,9 @@ object Tokenizer {
   }
 }
 
-class DocIndex(fname: String){
+class DocIndex(filename: String){
 
-  private val filename = fname
   private case class TfTuple(term: String, doc : String, count: Int)
-
-  def tkstream(in: TipsterStream) = {
-    var count = 0
-    in.stream.map(
-      doc => {
-        count += 1
-        println(count)
-        (doc.name, Tokenizer.tokenize(doc.content).groupBy(identity)
-                                         .mapValues(_.length))
-      }
-    )
-  }
 
   private def TfStream : Stream[TfTuple] = {
     var count = 0
