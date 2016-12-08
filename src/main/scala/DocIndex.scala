@@ -3,6 +3,7 @@ import ch.ethz.dal.tinyir.io.TipsterStream
 import com.github.aztek.porterstemmer.PorterStemmer
 
 import collection.mutable
+import math.log
 
 
 
@@ -69,11 +70,21 @@ class DocIndex(filename: String){
   /* total number of tokens in the collection */
   lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
-  lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
+  lazy val lambdad = ntokensdoc.mapValues(n => - log(1/n.toDouble))
 
   lazy val docList = fwIndex.keySet.toList
 
   lazy val vocab = fqIndex.keySet.toList
+
+  lazy val pwd = {
+    fwIndex.map{ case (doc, tklist) =>
+      val ntokens = ntokensdoc(doc)
+      (doc.intern(), tklist.map{ case (tk, fq) => (tk.intern(), fq.toDouble/ntokens)})
+    }
+  }
+
+  lazy val pw =
+    fqIndex.mapValues(_.map(_._2).sum.toDouble / ntokens)
 }
 
 object DocIndexTest {
