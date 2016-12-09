@@ -3,11 +3,14 @@ import collection.mutable
 
 class LanguageModel(index: DocIndex) {
   private def predictOneDoc(doc: String, querytoken: Seq[String]) = {
-    val pwd = index.pwd(doc).toMap
+//    val pwd = index.pwd(doc).toMap
     val pw = index.pw
     var likelihood = 0.0
-    for (word <- querytoken.intersect(pwd.keySet.toList)) {
-      likelihood = log(1+(1-index.lambdad(doc))/index.lambdad(doc)*pwd(word)/pw(word)) + log(index.lambdad(doc))
+    val lmbd = index.lambdad(doc)
+    for (word <- querytoken.intersect(index.fwIndex(doc).toMap.keySet.toList)) {
+      val pwdmap = index.fwIndex(doc).toMap
+      val pwd = pwdmap(word).toDouble / index.ntokens
+      likelihood += log(1+(1-lmbd)/lmbd*pwd/pw(word)) + log(lmbd)
     }
     likelihood
   }

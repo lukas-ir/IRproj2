@@ -66,12 +66,18 @@ object Proj2 {
     println("Start Predicting")
     val lmresult = querys.mapValues{lm.predict}.mapValues(_.map(_._1))
 
-    for (qnum <- lmresult.keySet.toList.sorted){
-      println(qnum)
+    for (i <- lm.predict("Airbus Subsidies")) {
+      println(i)
     }
-    println("Prediction finished")
 
-    val eva = new Evaluate(lmresult, judge)
-    eva.judgement
+
+
+//    for (qnum <- lmresult.keySet.toList.sorted){
+//      println(qnum)
+//    }
+//    println("Prediction finished")
+//
+//    val eva = new Evaluate(lmresult, judge)
+//    eva.judgement
   }
 }

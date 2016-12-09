@@ -70,7 +70,7 @@ class DocIndex(filename: String){
   /* total number of tokens in the collection */
   lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
-  lazy val lambdad = ntokensdoc.mapValues(n => - log(1/n.toDouble))
+  lazy val lambdad = ntokensdoc.mapValues(n => 1/n.toDouble)
 
   lazy val docList = fwIndex.keySet.toList
 
