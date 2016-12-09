@@ -3,6 +3,7 @@ import ch.ethz.dal.tinyir.io.TipsterStream
 import com.github.aztek.porterstemmer.PorterStemmer
 
 import collection.mutable
+import math.log
 
 
 
@@ -40,11 +41,11 @@ class DocIndex(filename: String){
     val map = mutable.Map[String, mutable.ListBuffer[(String, Int)]]()
     for (tftuple <- TfStream) {
       map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(String, Int)]())
-      map(tftuple.term) += ((tftuple.doc, tftuple.count))
+      map(tftuple.term) += ((tftuple.doc.intern(), tftuple.count))
     }
     map
        .filter(_._2.size > 2) // choose terms appear in at least 3 docs
-         .filter(_._2.size < 4000)
+       .filter(_._2.size < 6000)
        .mapValues(_.toMap)
        .toMap
   }
@@ -69,7 +70,7 @@ class DocIndex(filename: String){
   /* total number of tokens in the collection */
   lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
-  lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
+  lazy val lambdad = ntokensdoc.mapValues(x => log(1/x.toDouble))
 
   lazy val docList = fwIndex.keySet.toList
 
