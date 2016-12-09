@@ -24,7 +24,7 @@ object Proj2 {
 
     val index = new DocIndex(path)
     val lm = new LanguageModel(index)
-    lm.predict("Airbus Subsidies")
+    println(lm.predict("Airbus Subsidies"))
 
 
 

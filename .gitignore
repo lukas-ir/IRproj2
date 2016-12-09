@@ -19,3 +19,5 @@ project/plugins/project/
 # IntelliJ specific
 .idea
 *.iml
+
+*DS_Store*

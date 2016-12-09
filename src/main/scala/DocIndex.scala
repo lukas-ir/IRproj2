@@ -36,7 +36,7 @@ class DocIndex(filename: String){
 
 
   /* token -> list of docID containing this token and its frequency */
-  lazy val fqIndex : Map[String, List[(String, Int)]] = {
+  lazy val fqIndex : Map[String, Map[String, Int]] = {
     val map = mutable.Map[String, mutable.ListBuffer[(String, Int)]]()
     for (tftuple <- TfStream) {
       map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(String, Int)]())
@@ -44,26 +44,27 @@ class DocIndex(filename: String){
     }
     map
        .filter(_._2.size > 2) // choose terms appear in at least 3 docs
-       .mapValues(_.toList.sorted)
+         .filter(_._2.size < 4000)
+       .mapValues(_.toMap)
        .toMap
   }
 
   /* document -> list of tokens and its frequency */
-  lazy val fwIndex : Map[String, List[(String, Int)]] = {
+  lazy val fwIndex : Map[String, Map[String, Int]] = {
     val map = mutable.Map[String, mutable.ListBuffer[(String, Int)]]()
-    for ((tk, docfreqlist) <- fqIndex) {
-      for ((doc, freq) <- docfreqlist) {
-        map.getOrElseUpdate(doc, mutable.ListBuffer[(String, Int)]())
-        map(doc.intern()) += ((tk.intern(), freq))
+    for ((tk, docfreqmap) <- fqIndex) {
+      for ((doc, freq) <- docfreqmap) {
+        map.getOrElseUpdate(doc.intern(), mutable.ListBuffer[(String, Int)]())
+        map(doc) += ((tk, freq))
       }
     }
     map
-        .mapValues(_.toList.sorted )
-      .toMap
+        .mapValues(_.toMap)
+        .toMap
   }
 
   /* doc -> ntoken of this doc*/
-  lazy val ntokensdoc = fwIndex.mapValues(_.map(_._2).sum)
+  lazy val ntokensdoc = fwIndex.mapValues(_.values.sum)
 
   /* total number of tokens in the collection */
   lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
@@ -73,6 +74,8 @@ class DocIndex(filename: String){
   lazy val docList = fwIndex.keySet.toList
 
   lazy val vocab = fqIndex.keySet.toList
+
+  lazy val pw = fqIndex.mapValues(_.values.sum.toDouble / ntokens)
 }
 
 object test {
