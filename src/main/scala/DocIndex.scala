@@ -1,24 +1,44 @@
-import ch.ethz.dal.tinyir.processing.StopWords
-import ch.ethz.dal.tinyir.io.TipsterStream
-import com.github.aztek.porterstemmer.PorterStemmer
+import ch.ethz.dal.tinyir.io.{ParsedXMLStream, TipsterStream}
+import ch.ethz.dal.tinyir.processing.XMLDocument
 
+
+import math.ceil
 import collection.mutable
 import math.log
 
 
+/*
 
-object Tokenizer {
-  def tokenize(content: String) = {
-    val tokens = content.toLowerCase()
-                        .replaceAll("[^a-z ]", " ")
-                        .split(" ")
-                        .filter(_.length >= 3)
+object TipsterStreamPartition {
 
-    StopWords.filterOutSW(tokens)
-             .map(PorterStemmer.stem)
-
+  /** Creates a random partition of 0 to maxId
+    *
+    * @param fraction
+    * @param maxId
+    */
+  def generatePartitionIds(fraction: Double, maxId: Int): Set[Int] = {
+    val partitionSize = ceil(fraction * maxId)
+    val resultPartition = new mutable.HashSet[Int]()
+    while (resultPartition.size < partitionSize) {
+      resultPartition += util.Random.nextInt()
+    }
+    resultPartition.toSet
   }
 }
+
+/** Creates a partition of a TipsterSteam
+  *
+  * @param parentStream
+  * @param partitionIds
+  */
+case class TipsterStreamPartition(val parentStream: TipsterStream, val partitionIds : Set[Int]) {
+  def stream : Stream[XMLDocument] = parentStream.stream.zipWithIndex.filter { case (doc,id) => partitionIds(id) }.map(_._1)
+  def length : Int = partitionIds.size
+}
+
+*/
+
+
 
 class DocIndex(filename: String){
 
