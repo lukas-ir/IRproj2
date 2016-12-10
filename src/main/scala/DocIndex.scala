@@ -12,7 +12,7 @@ object Tokenizer {
     val tokens = content.toLowerCase()
                         .replaceAll("[^a-z ]", " ")
                         .split(" ")
-                        .filter(_.length > 3)
+                        .filter(_.length >= 3)
 
     StopWords.filterOutSW(tokens)
              .map(PorterStemmer.stem)
@@ -30,6 +30,7 @@ class DocIndex(filename: String){
     in.stream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
                .groupBy(identity)
+//               .filter(_._2.length > 3)
                .map{case (tk,fq) => TfTuple(tk.intern(), doc.name.intern(), fq.length)}
     }
   }
@@ -70,7 +71,7 @@ class DocIndex(filename: String){
   /* total number of tokens in the collection */
   lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
-  lazy val lambdad = ntokensdoc.mapValues(x => log(1/x.toDouble))
+  lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
 
   lazy val docList = fwIndex.keySet.toList
 
@@ -84,19 +85,6 @@ object test {
     val fname = "./data/documents"
     val docs = new DocIndex(fname)
 
-//    for (i <-  docs.fqIndex) {
-//      println(i)
-//    }
-//
-//    for (i <- docs.fwIndex) {
-//      println(i)
-//    }
-
-//    println(docs.Pwd)
-
-//    println(docs.lambdad)
-//
-//    println( docs.fqIndex.size)
     val dist = docs.fqIndex.mapValues(_.size).groupBy(_._2).mapValues(_.map(_._1))
     for (i <- dist.keySet.toList.sorted) {
 

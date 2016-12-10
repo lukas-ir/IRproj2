@@ -36,7 +36,7 @@ class Evaluate(retrieved:Map[Int, List[String]], relevant: Map[Int, List[String]
 
   def judgement = {
     for (qnum <- relevant.keySet.toList.sorted) {
-      println("Query: ", qnum)
+      println("Query: " + qnum)
       println("TP: "+TP(qnum).size+" FP: "+FP(qnum).size+" FN: " + FN(qnum).size)
       println("Precision: "+Precision(qnum)+" Recall: "+Recall(qnum))
       println(retrieved(qnum))

@@ -3,16 +3,17 @@ import math.log
 
 class LanguageModel(index: DocIndex) {
 
-  private def predictOneDoc(doc: String, qrtk: Seq[String]) =
+  private def predictOneDoc(doc: String, qrtk: Seq[String]) = {
+    val lmbd = index.lambdad(doc)
     qrtk.toSet
-        .intersect(index.fwIndex(doc).keySet)
-        .map{ word =>
-          val pwd = index.fwIndex(doc)(word).toDouble / index.ntokensdoc(doc)
-          val lmbd = index.lambdad(doc)
-          val pw = index.pw(word)
-          log(1+(1-lmbd)/lmbd*pwd/pw) + log(lmbd)
-        }
-        .sum
+      .intersect(index.fwIndex(doc).keySet)
+      .map { word =>
+        val pwd = index.fwIndex(doc)(word).toDouble / index.ntokensdoc(doc)
+        val pw = index.pw(word)
+        log(1 + (1 - lmbd) / lmbd * pwd / pw)
+      }
+      .sum + log(lmbd)
+  }
 
   def predict(query: String): List[(String, Double)] = {
     println("predicting "+query)
