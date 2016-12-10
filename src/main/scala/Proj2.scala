@@ -1,5 +1,6 @@
 import ch.ethz.dal.tinyir.lectures.TipsterGroundTruth
 import scala.io.Source
+import math.min
 
 class Evaluate(retrieved:Map[Int, List[String]], relevant: Map[Int, List[String]]) {
   val TP = {
@@ -28,14 +29,14 @@ class Evaluate(retrieved:Map[Int, List[String]], relevant: Map[Int, List[String]
 
   val Recall = {
     TP.map{ case (qnum, tplist) =>
-      (qnum, tplist.size.toDouble / relevant(qnum).size)
+      (qnum, tplist.size.toDouble / min(relevant(qnum).size, 100.0))
     }
   }
 
 
   def judgement = {
     for (qnum <- relevant.keySet.toList.sorted) {
-      println("Query: ", qnum)
+      println("Query: " + qnum)
       println("TP: "+TP(qnum).size+" FP: "+FP(qnum).size+" FN: " + FN(qnum).size)
       println("Precision: "+Precision(qnum)+" Recall: "+Recall(qnum))
       println(retrieved(qnum))
@@ -66,9 +67,13 @@ object Proj2 {
     println("Start Predicting")
     val lmresult = querys.mapValues{lm.predict}.mapValues(_.map(_._1))
 
-    for (qnum <- lmresult.keySet.toList.sorted){
-      println(qnum)
-    }
+
+//    println(lm.predict("Airbus Subsidies"))
+
+
+//    for (qnum <- lmresult.keySet.toList.sorted){
+//      println(qnum)
+//    }
     println("Prediction finished")
 
     val eva = new Evaluate(lmresult, judge)

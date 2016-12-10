@@ -1,24 +1,32 @@
 import math.log
-import collection.mutable
+
 
 class LanguageModel(index: DocIndex) {
-  private def predictOneDoc(doc: String, querytoken: Seq[String]) = {
-    val pwd = index.pwd(doc).toMap
-    val pw = index.pw
-    var likelihood = 0.0
-    for (word <- querytoken.intersect(pwd.keySet.toList)) {
-      likelihood = log(1+(1-index.lambdad(doc))/index.lambdad(doc)*pwd(word)/pw(word)) + log(index.lambdad(doc))
-    }
-    likelihood
+
+  private def predictOneDoc(doc: String, qrtk: Seq[String]) = {
+    val lmbd = index.lambdad(doc)
+    qrtk.toSet
+      .intersect(index.fwIndex(doc).keySet)
+      .map { word =>
+        val pwd = index.fwIndex(doc)(word).toDouble / index.ntokensdoc(doc)
+        val pw = index.pw(word)
+        log(1 + (1 - lmbd) / lmbd * pwd / pw)
+      }
+      .sum + log(lmbd)
   }
 
   def predict(query: String): List[(String, Double)] = {
-    println("Predicting query: "+query)
+    println("predicting "+query)
     val querytoken = Tokenizer.tokenize(query)
-    val likelihood = index.fwIndex.map{
-      case (doc,_) => (doc.intern(), predictOneDoc(doc, querytoken))
-    }
+    println(querytoken)
 
-    likelihood.filter(_._2 != 0.0).toList.sortBy(- _._2).take(100)
+    index.fwIndex
+         .keySet
+         .map(doc => (doc.intern(), predictOneDoc(doc, querytoken)))
+         .filter(_._2 != 0.0)
+         .toList
+         .sortBy(- _._2)
+         .take(100)
+
   }
 }
