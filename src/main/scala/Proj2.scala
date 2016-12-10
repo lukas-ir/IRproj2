@@ -1,4 +1,6 @@
+import ch.ethz.dal.tinyir.io.TipsterStream
 import ch.ethz.dal.tinyir.lectures.TipsterGroundTruth
+
 import scala.io.Source
 import math.min
 
@@ -59,8 +61,16 @@ object Proj2 {
 
 
   def main(args: Array[String]): Unit = {
-    val index = new DocIndex(DATAPATH)
     val querys = loadQuery(QUERYPATH)
+    val docStream = new TipsterStream(DATAPATH)
+
+    /*
+    // Process only a fraction of the collection
+    val fraction : Double = 0.1
+    val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
+    */
+
+    val index = new DocIndex( docStream/*Partition*/.stream )
     val judge = new TipsterGroundTruth(JUDGEPATH).judgements.map{case (k,v)=>(k.toInt, v.toList)}
 
     val lm = new LanguageModel(index)

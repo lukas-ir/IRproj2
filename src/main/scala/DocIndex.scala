@@ -7,7 +7,6 @@ import collection.mutable
 import math.log
 
 
-/*
 
 object TipsterStreamPartition {
 
@@ -16,13 +15,17 @@ object TipsterStreamPartition {
     * @param fraction
     * @param maxId
     */
-  def generatePartitionIds(fraction: Double, maxId: Int): Set[Int] = {
+  private def generatePartitionIds(maxId : Int, fraction: Double): Set[Int] = {
     val partitionSize = ceil(fraction * maxId)
     val resultPartition = new mutable.HashSet[Int]()
     while (resultPartition.size < partitionSize) {
-      resultPartition += util.Random.nextInt()
+      resultPartition += util.Random.nextInt(maxId)
     }
     resultPartition.toSet
+  }
+
+  def create(parentStream: TipsterStream, fraction : Double): TipsterStreamPartition = {
+    return new TipsterStreamPartition(parentStream,generatePartitionIds(parentStream.length, fraction))
   }
 }
 
@@ -36,18 +39,15 @@ case class TipsterStreamPartition(val parentStream: TipsterStream, val partition
   def length : Int = partitionIds.size
 }
 
-*/
 
 
-
-class DocIndex(filename: String){
+class DocIndex(docStream: Stream[XMLDocument]){
 
   private case class TfTuple(term: String, doc : String, count: Int)
 
   private def TfStream : Stream[TfTuple] = {
     var count = 0
-    val in = new TipsterStream(filename)
-    in.stream.flatMap{ doc =>
+    docStream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
                .groupBy(identity)
 //               .filter(_._2.length > 3)
@@ -103,7 +103,15 @@ class DocIndex(filename: String){
 object test {
   def main(args: Array[String]): Unit = {
     val fname = "./data/documents"
-    val docs = new DocIndex(fname)
+    val docStream = new TipsterStream(fname)
+
+    val fraction : Double = 0.1
+    val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
+
+
+    val docs = new DocIndex(docStreamPartition.stream)
+
+
 
     val dist = docs.fqIndex.mapValues(_.size).groupBy(_._2).mapValues(_.map(_._1))
     for (i <- dist.keySet.toList.sorted) {
