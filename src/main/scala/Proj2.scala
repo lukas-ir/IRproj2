@@ -28,39 +28,60 @@ object Proj2 {
 
 
     // TODO: Try to build the indices non-lazily so we can attribute performance to their construction
-    println("Building Indices... ")
-    val index = new DocIndex( docStream/*Partition*/.stream )
-    println("Built indices.")
+    println("***** Building Indices... *****")
+    val index = new DocIndex( docStreamPartition.stream )
+    println("***** Built indices. *****")
 
 
-    // ***** Create relevance models *****
+    // ***** Load search queries and relevance data *****
+
+    val queries = Query.load(QUERYPATH)
+    val judge = new TipsterGroundTruth(JUDGEPATH).judgements.map{case (k,v)=>(k.toInt, v.toList)}
+
+
+    // ***** Create language model *****
 
     //val lm = new LanguageModel(index)
     val maxLhLM = new NewLanguageModel(index)
 
-    // TODO: Tf-Idf model
-
-    // TODO: Train ("tune") models
-
+    // TODO: Train ("tune") model parameters
 
     // ***** Perform search *****
 
-    val queries = Query.load(QUERYPATH)
-
-    println("Start Language model search")
+    println("***** Start Language model search *****")
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
-
-    //val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
-    val lmresult = maxLhLM.search(queries,100).mapValues(_.map(_.doc))
-    println("Language model search finished")
-
+    val lmResult = maxLhLM.search(queries,100).mapValues(_.map(_.doc))
+    println("***** Language model search finished *****")
 
     // ***** Evaluate search results *****
 
-    val judge = new TipsterGroundTruth(JUDGEPATH).judgements.map{case (k,v)=>(k.toInt, v.toList)}
-    val evalSearch = new EvaluateRanking(lmresult, judge)
-    evalSearch.judgement
+    println("***** Evaluating Language model *****")
 
+    val evalSearchLm = new EvaluateRanking(lmResult, judge)
+    evalSearchLm.judgement
+
+    println("***** Evaluation of language model finished *****")
+
+
+
+    // ***** Create term model *****
+
+    val tfIdfM = new TfIdfModel(index)
+
+    // ***** Perform search *****
+
+    println("***** Start term model search *****")
+    val tmResult = tfIdfM.search(queries,100).mapValues(_.map(_.doc))
+    println("***** Term model search finished *****")
+
+    // ***** Evaluate search results *****
+
+    println("***** Evaluating term model model *****")
+
+    val evalSearchTM = new EvaluateRanking(tmResult, judge)
+    evalSearchTM.judgement
+
+    println("***** Evaluation of term model finished *****")
 
   }
 }

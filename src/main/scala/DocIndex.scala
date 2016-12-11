@@ -29,7 +29,7 @@ class DocIndex(docStream: Stream[XMLDocument]){
 
   // TODO: maybe rename fqIndex - does this abbrevation have a meaning?
   /* Nested map: token -> (document ID containing this token ->  token frequency in this document) */
-  lazy val fqIndex : Map[Term, Map[DocId, Int]] = {
+  val fqIndex : Map[Term, Map[DocId, Int]] = {
     val map = mutable.Map[Term, mutable.ListBuffer[(DocId, Int)]]()
     for (tftuple <- tfStream) {
       map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(DocId, Int)]())
@@ -43,7 +43,7 @@ class DocIndex(docStream: Stream[XMLDocument]){
   }
 
   /* Nested map: document -> (contained token -> token frequency in this document) */
-  lazy val fwIndex : Map[DocId, Map[Term, Int]] = {
+  val fwIndex : Map[DocId, Map[Term, Int]] = {
     val map = mutable.Map[DocId, mutable.ListBuffer[(Term, Int)]]()
     for ((tk, docfreqmap) <- fqIndex) {
       for ((doc, freq) <- docfreqmap) {
@@ -56,6 +56,7 @@ class DocIndex(docStream: Stream[XMLDocument]){
         .toMap
   }
 
+  // TODO: Consider moving to language model
   /* doc -> ntoken of this doc*/
   lazy val ntokensdoc = fwIndex.mapValues(_.values.sum)
 
@@ -65,10 +66,13 @@ class DocIndex(docStream: Stream[XMLDocument]){
   // TODO: Move everything to language model, what belongs there
   lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
 
+  // TODO: Seems to be unused
   lazy val docList = fwIndex.keySet.toList
 
+  // TODO: Seems to be unused
   lazy val vocab = fqIndex.keySet.toList
 
+  // TODO: Consider moving to language model
   lazy val pw = fqIndex.mapValues(_.values.sum.toDouble / ntokens)
 }
 
