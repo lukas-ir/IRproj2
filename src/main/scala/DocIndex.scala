@@ -56,6 +56,8 @@ class DocIndex(docStream: Stream[XMLDocument]){
         .toMap
   }
 
+
+
   // TODO: Consider moving to language model
   /* doc -> ntoken of this doc*/
   lazy val ntokensdoc = fwIndex.mapValues(_.values.sum)

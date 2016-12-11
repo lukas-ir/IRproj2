@@ -46,6 +46,11 @@ object TipsterStreamPartition {
 
 
 
+/** TipsterSteam subsample (more efficient than TipsterStreamPartition)
+  *
+  * @param path           path to TipsterStream data set
+  * @param fraction       fraction of documents of base collection to serve
+  */
 
 class TipsterStreamSubsample (path: String, val fraction : Double, ext: String = "")
   extends ParsedXMLStream(new ZipDirStream(path, "")){
@@ -53,12 +58,10 @@ class TipsterStreamSubsample (path: String, val fraction : Double, ext: String =
     .filter { case (doc, id) => partitionIds(id) }.map(_._1).map(is => new TipsterParse(is))
   def length = unparsed.length
 
-  /** Creates a random partition of 0 to maxId
-    *
-    * @param fraction
-    * @param maxId
+  /** Random enumeration document stream Ids
     */
-  private def generatePartitionIds(maxId : Int, fraction: Double): Set[Int] = {
+  private val partitionIds : Set[Int] = {
+    val maxId = unparsed.length
     val partitionSize = ceil(fraction * maxId)
     val resultPartition = new mutable.HashSet[Int]()
     while (resultPartition.size < partitionSize) {
@@ -66,8 +69,6 @@ class TipsterStreamSubsample (path: String, val fraction : Double, ext: String =
     }
     resultPartition.toSet
   }
-
-  private val partitionIds : Set[Int] = generatePartitionIds(unparsed.length,fraction)
 }
 
 
