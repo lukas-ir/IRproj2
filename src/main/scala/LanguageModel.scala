@@ -37,3 +37,22 @@ class LanguageModel(index: DocIndex) {
 
   }
 }
+
+// TODO: move all the index references to this class
+class NewLanguageModel(docIndex: DocIndex) extends SearchEngine(docIndex) {
+
+  override protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
+    candidates.map(doc => (doc,index.lambdad(doc)))
+              .map{
+      case (doc,lmbd) => ScoredDocument(
+        doc.intern(),query.intersect(index.fwIndex(doc).keySet)
+                 .map { word =>
+                   val pwd = index.fwIndex(doc)(word).toDouble / index.ntokensdoc(doc)
+                   val pw = index.pw(word)
+                   log(1 + (1 - lmbd) / lmbd * pwd / pw)
+                 }.sum + log(lmbd)
+        )}
+      .toList.sorted
+  }
+
+}

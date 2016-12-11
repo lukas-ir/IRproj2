@@ -3,7 +3,6 @@ import Typedefs._
 import ch.ethz.dal.tinyir.lectures.TermFrequencies
 
 
-
 // ************************ Tf-Idf model **************************
 
 /** Provides Tf-Idf search over Tipster collection.
@@ -31,7 +30,7 @@ class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
     candidates.map(doc => ScoredDocument(
                       doc,query.map(term => tfIdf(docTermFrequencies(doc)(term),
                                                   docFrequency(term), numDocs))
-                                     .sum)).toSeq.sorted
+                                     .sum)).toList.sorted
   }
 
   /** The TF-IDF scoring function implementation
