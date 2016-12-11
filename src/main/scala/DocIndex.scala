@@ -69,7 +69,12 @@ class DocIndex(path: String, fraction : Double){
   lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
   // TODO: Move everything to language model, what belongs there
-  lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
+  // Witten Bell Smoothing
+//  lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
+  lazy val lambdad = fwIndex.map{ case (doc, tfmap) =>
+    val cf = tfmap.values.sum
+    (doc, cf / (cf + fwIndex.size))
+  }
 
   // TODO: Seems to be unused
   lazy val docList = fwIndex.keySet.toList
