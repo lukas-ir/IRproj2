@@ -12,16 +12,15 @@ class TfIdfModel(docIndex : DocIndex, numSearchResults : Int) extends SearchEngi
   /** Ranks a set of candidate documents according to TF-IDF term-model scoring criterion
     *
     * @param query       The query
-    * @param candidates  Candidate documents with at least one word in common with a document in the collection
+    * @param doc         Candidate documents with at least one word in common with a document in the collection
     * @return
     */
-  override protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
-    candidates.map(doc => ScoredDocument(
-                      doc,query.filter(term => index.fwIndex(doc).contains(term))
+  override def score(query : Set[Term], doc : DocId) : Double = {
+    query.filter(term => index.fwIndex(doc).contains(term))
                                .map(term => TfIdfModel.tfIdf(index.fwIndex(doc)(term), // Document term frequency
                                                              index.fqIndex(term).size, // Per term document frequency
                                                              index.fwIndex.size))      // Total number of documents
-        .sum)).toList.sorted
+        .sum
   }
 }
 

@@ -17,6 +17,15 @@ abstract class SearchEngine(docIndex : DocIndex, numSearchResults : Int) {
 
   protected val numResults = numSearchResults
 
+  /** Perform search for multiple queries on document collection
+    *
+    * @param queries      Query ID to query string map
+    * @return             Query ID to ranked search results map
+    */
+  def search(queries : Map[QueryId,String]) : Map[QueryId,List[ScoredDocument]] = {
+    queries.mapValues(search(_))
+  }
+
   /** Perform search on document collection
     *
     * @param query        Search query string
@@ -29,21 +38,22 @@ abstract class SearchEngine(docIndex : DocIndex, numSearchResults : Int) {
       term => index.fqIndex.getOrElse(term,Map[DocId,Int]()).keySet)).take(numResults)
   }
 
-  /** Perform search for multiple queries on document collection
-    *
-    * @param queries      Query ID to query string map
-    * @return             Query ID to ranked search results map
-    */
-  def search(queries : Map[QueryId,String]) : Map[QueryId,List[ScoredDocument]] = {
-    queries.mapValues(search(_))
-  }
-
   /** Rank a set of candidate documents on tokenized query
     *
     * @param query       tokenized query
     * @param candidates  candidate documents
     * @return            Ranked list of documents with scores
     */
-  protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument]
+  private def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
+    candidates.map(doc => ScoredDocument( doc.intern(),score(query,doc) ) ).toList.sorted
+  }
+
+  /** Rank a set of candidate documents on tokenized query
+    *
+    * @param query       tokenized query
+    * @param candidate  candidate document
+    * @return            Ranked list of documents with scores
+    */
+  def score(query : Set[Term], candidate : DocId) : Double
 }
 

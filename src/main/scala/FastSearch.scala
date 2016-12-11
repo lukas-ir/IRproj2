@@ -1,6 +1,5 @@
 import Typedefs._
 
-import ch.ethz.dal.tinyir.lectures.TipsterGroundTruth
 
 /** Main object of this application.
   * Constructs an inverted and forward index used to build
@@ -8,7 +7,7 @@ import ch.ethz.dal.tinyir.lectures.TipsterGroundTruth
   * search for queries and evalutes the obtained rankings
   * against a priori known relevance results.
   */
-object Proj2 {
+object FastSearch {
   val DATAPATH = "./data/documents"
   val QUERYPATH = "./data/questions-descriptions.txt"
   val JUDGEPATH = "./data/relevance-judgements.csv"
@@ -58,7 +57,7 @@ object Proj2 {
     println("***** Evaluating Language model *****")
 
     val evalSearchLm = EvaluateRanking.create(lmResult, judge)
-    evalSearchLm.judgement
+    // evalSearchLm.judgement
 
     println("***** Evaluation of language model finished *****")
 
@@ -79,12 +78,10 @@ object Proj2 {
     println("***** Evaluating term model model *****")
 
     val evalSearchTM = EvaluateRanking.create(tmResult, judge)
-    evalSearchTM.judgement
+   // evalSearchTM.judgement
 
     println("***** Evaluation of term model finished *****")
 
   }
-
-
 
 }

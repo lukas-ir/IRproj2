@@ -106,7 +106,7 @@ class EvaluateRanking(retrieved:Map[QueryId, List[ScoredDocument]], relevant: Ma
   }
   */
 
-  def judgement = {
+  val judgement = {
     for (qnum <- relevant.keySet.toList.sorted) {
       println("Query: " + qnum)
       println("TP: "+TP(qnum).size+" FP: "+FP(qnum).size+" FN: " + FN(qnum).size)
@@ -117,6 +117,7 @@ class EvaluateRanking(retrieved:Map[QueryId, List[ScoredDocument]], relevant: Ma
     }
     println("MAP: "+MAP)
     println("-----------------------------------------")
+    true
   }
 }
 
