@@ -19,12 +19,13 @@ object Proj2 {
 
     // ***** Build indices *****
 
-    val docStream = new TipsterStream(DATAPATH)
+    //val docStream = new TipsterStream(DATAPATH)
 
 
     // Process only a fraction of the collection
     val fraction : Double = 0.001
-    val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
+    //val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
+    val docStreamPartition = new TipsterStreamSubsample(DATAPATH,fraction)
 
 
     // TODO: Try to build the indices non-lazily so we can attribute performance to their construction
