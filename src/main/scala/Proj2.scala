@@ -19,6 +19,7 @@ object Proj2 {
 
     // ***** Build indices *****
 
+    // TODO: make this a temporary variable so it doesn't outlive index construction
     //val docStream = new TipsterStream(DATAPATH)
 
 
