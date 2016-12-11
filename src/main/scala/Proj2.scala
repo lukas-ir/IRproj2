@@ -45,7 +45,7 @@ class Evaluate(retrieved:Map[Int, List[String]], relevant: Map[Int, List[String]
             patk += tp.toDouble / i
           }
         }
-        patk / (TP(docno).size + FN(docno).size)
+        patk / min(TP(docno).size + FN(docno).size, retrieved.size)
       })
     }
   }
