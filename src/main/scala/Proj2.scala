@@ -78,8 +78,8 @@ object Proj2 {
 
     println("***** Evaluating term model model *****")
 
-    val evalSearchTM = new EvaluateRanking(tmResult, judge)
-    evalSearchTM.judgement
+//    val evalSearchTM = new EvaluateRanking(tmResult, judge)
+//    evalSearchTM.judgement
 
     println("***** Evaluation of term model finished *****")
 

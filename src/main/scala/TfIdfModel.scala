@@ -10,16 +10,6 @@ import ch.ethz.dal.tinyir.lectures.TermFrequencies
   */
 class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
 
-  // Per term document frequency
-  private val docFrequency : Map[Term,Int] = index.fqIndex.mapValues( _.size )
-
-  // Total number of documents
-  private val numDocs : Double = index.fwIndex.size
-
-  // Document-wise term frequencies
-  private val docTermFrequencies : Map[DocId, Map[Term,Int]]  = index.fwIndex
-
-
   /** Ranks a set of candidate documents according to TF-IDF term-model scoring criterion
     *
     * @param query       The query
@@ -28,9 +18,10 @@ class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
     */
   override protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
     candidates.map(doc => ScoredDocument(
-                      doc,query.map(term => tfIdf(docTermFrequencies(doc)(term),
-                                                  docFrequency(term), numDocs))
-                                     .sum)).toList.sorted
+                      doc,query.map(term => tfIdf(index.fwIndex(doc).getOrElse(term,0).toDouble,  // Document term frequency
+                                                  index.fqIndex.getOrElse(term,Map[DocId,Int]()).size.toDouble, // Per term document frequency
+                                                  index.fwIndex.size.toDouble))   // Total number of documents
+        .sum)).toList.sorted
   }
 
   /** The TF-IDF scoring function implementation
