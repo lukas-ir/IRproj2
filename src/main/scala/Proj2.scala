@@ -1,6 +1,5 @@
 import Typedefs._
 
-import ch.ethz.dal.tinyir.io.TipsterStream
 import ch.ethz.dal.tinyir.lectures.TipsterGroundTruth
 
 /** Main object of this application.
@@ -39,6 +38,7 @@ object Proj2 {
 
     val queries = Query.load(QUERYPATH)
     val judge = new TipsterGroundTruth(JUDGEPATH).judgements.map{case (k,v)=>(k.toInt, v.toList)}
+    val numSearchResults : Int = 100
 
 
     // ***** Create language model *****
@@ -52,7 +52,7 @@ object Proj2 {
 
     println("***** Start Language model search *****")
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
-    val lmResult = maxLhLM.search(queries,100).mapValues(_.map(_.doc))
+    val lmResult = maxLhLM.search(queries,numSearchResults).mapValues(_.map(_.doc))
     println("***** Language model search finished *****")
 
     // ***** Evaluate search results *****
@@ -73,7 +73,7 @@ object Proj2 {
     // ***** Perform search *****
 
     println("***** Start term model search *****")
-    val tmResult = tfIdfM.search(queries,100).mapValues(_.map(_.doc))
+    val tmResult = tfIdfM.search(queries,numSearchResults).mapValues(_.map(_.doc))
     println("***** Term model search finished *****")
 
     // ***** Evaluate search results *****
