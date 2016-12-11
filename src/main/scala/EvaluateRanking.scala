@@ -34,15 +34,29 @@ class EvaluateRanking(retrieved:Map[Int, List[String]], relevant: Map[Int, List[
     }
   }
 
+  val AP = {
+    retrieved.map { case (qnum, _) =>
+      (qnum, {
+        var patk = 0.0
+        val rele = relevant(qnum)
+        val retv = retrieved(qnum)
+        for (i <- 1 to retv.size) {
+          if (rele.contains(retv(i-1))) {
+            val tp = retv.slice(0, i).intersect(rele).size
+            patk += tp.toDouble / i
+          }
+        }
+        patk / (TP(qnum).size + FN(qnum).size)
+      })
+    }
+  }
 
-  // TODO: F1, average precision, mean average precision
+  val MAP = AP.values.sum / AP.size
 
-  // def F1 = 2.*precision*recall/(precision + recall)
-
-  // average precision average of sums of precision up to every relevant document divided by number of relevant documents
-  // get code in tinyIR
-
-  // mean average precision: query-average precision averaged over all queries
+  val F1 = Precision.map{ case (qnum, pr) =>
+    val rc = Recall(qnum)
+    (qnum, 2.0 * pr * rc / (pr + rc))
+  }
 
 
   def judgement = {
