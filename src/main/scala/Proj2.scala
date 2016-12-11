@@ -35,7 +35,8 @@ object Proj2 {
 
     // ***** Create relevance models *****
 
-    val lm = new LanguageModel(index)
+    //val lm = new LanguageModel(index)
+    val maxLhLM = new NewLanguageModel(index)
 
     // TODO: Tf-Idf model
 
@@ -47,15 +48,10 @@ object Proj2 {
     val queries = Query.load(QUERYPATH)
 
     println("Start Language model search")
-    val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
+    // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
 
-
-//    println(lm.predict("Airbus Subsidies"))
-
-
-//    for (qnum <- lmresult.keySet.toList.sorted){
-//      println(qnum)
-//    }
+    //val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
+    val lmresult = maxLhLM.search(queries,100).mapValues(_.map(_.doc))
     println("Language model search finished")
 
 
@@ -64,7 +60,6 @@ object Proj2 {
     val judge = new TipsterGroundTruth(JUDGEPATH).judgements.map{case (k,v)=>(k.toInt, v.toList)}
     val evalSearch = new EvaluateRanking(lmresult, judge)
     evalSearch.judgement
-
 
 
   }

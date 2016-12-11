@@ -41,10 +41,10 @@ class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
     * @return                TF-IDF score
     */
   private def tfIdf(termFrequency: Double, docFrequency : Double, numDocs : Double) : Double = {
-    if (termFrequency > 0) {
-      return TermFrequencies.log2( 1. + termFrequency ) * TermFrequencies.log2(numDocs/docFrequency)
+    if (termFrequency > 0.toDouble) {
+      return TermFrequencies.log2( 1.toDouble + termFrequency ) * TermFrequencies.log2(numDocs/docFrequency)
     } else {
-      return 0
+      return 0.toDouble
     }
   }
 }
@@ -80,5 +80,6 @@ object TfIdfTest {
 //    // languageModelSearch.search(new Set[String]("Some","random","words")).take(100)
 //
 //    // TODO: Check against provided test data
+    return 0
   }
 }

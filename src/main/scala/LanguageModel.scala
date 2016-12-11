@@ -38,19 +38,24 @@ class LanguageModel(index: DocIndex) {
   }
 }
 
-// TODO: move all the index references to this class
+/** Bag-of-words multinomial maximum likelihood language model
+  *
+  * @param docIndex  Inverted index for fast retrieval
+  *
+  * TODO: Cleanup of cross-dependencies on DocIndex class (move all here)
+  */
 class NewLanguageModel(docIndex: DocIndex) extends SearchEngine(docIndex) {
 
   override protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
-    candidates.map(doc => (doc,index.lambdad(doc)))
+    candidates.map(doc => (doc,index.lambdad(doc)))               /* zip document with Jelinek-Mercer smoothing parameter */
               .map{
       case (doc,lmbd) => ScoredDocument(
-        doc.intern(),query.intersect(index.fwIndex(doc).keySet)
+        doc.intern(),query.intersect(index.fwIndex(doc).keySet)   /* get query tokens occuring in document */
                  .map { word =>
-                   val pwd = index.fwIndex(doc)(word).toDouble / index.ntokensdoc(doc)
-                   val pw = index.pw(word)
-                   log(1 + (1 - lmbd) / lmbd * pwd / pw)
-                 }.sum + log(lmbd)
+                   val pwd = index.fwIndex(doc)(word).toDouble / index.ntokensdoc(doc) /* query token frequency divided by total number of tokens in document */
+                   val pw = index.pw(word)                        /* relative collection frequency of query token */
+                   log(1 + (1 - lmbd) / lmbd * pwd / pw)          /* query-token dependent contribution to document score */
+                 }.sum + log(lmbd)                                /* document-dependent Jelinek-Mercer smoothing parameter */
         )}
       .toList.sorted
   }
