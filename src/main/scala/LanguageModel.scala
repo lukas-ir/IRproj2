@@ -2,6 +2,9 @@ import Typedefs._
 
 import math.log
 
+// TODO: Decide for a single implementation
+
+/*
 /** Bag-of-words multinomial maximum likelihood language model
   *
   * @param index  Inverted index for fast retrieval
@@ -37,6 +40,7 @@ class LanguageModel(index: DocIndex) {
 
   }
 }
+*/
 
 /** Bag-of-words multinomial maximum likelihood language model
   *

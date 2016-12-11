@@ -22,8 +22,8 @@ abstract class SearchEngine(docIndex : DocIndex, numSearchResults : Int) {
     * @param queries      Query ID to query string map
     * @return             Query ID to ranked search results map
     */
-  def search(queries : Map[QueryId,String]) : Map[QueryId,List[ScoredDocument]] = {
-    queries.mapValues(search(_))
+  def fastSearch(queries : Map[QueryId,String]) : Map[QueryId,List[ScoredDocument]] = {
+    queries.mapValues(fastSearch(_))
   }
 
   /** Perform search on document collection
@@ -31,12 +31,35 @@ abstract class SearchEngine(docIndex : DocIndex, numSearchResults : Int) {
     * @param query        Search query string
     * @return             Ranked search results
     */
-  def search(query : String) : List[ScoredDocument] = {
-    println("Searching collection for query : "+query)
+  def fastSearch(query : String) : List[ScoredDocument] = {
+    println("Fast search on collection for query : "+query)
     val tokenizedQuery : Set[Term] = Tokenizer.tokenize(query).toSet
     rank(tokenizedQuery,tokenizedQuery.flatMap(
       term => index.fqIndex.getOrElse(term,Map[DocId,Int]()).keySet)).take(numResults)
   }
+
+
+  /** Perform search for multiple queries on document collection
+    *
+    * @param queries      Query ID to query string map
+    * @return             Query ID to ranked search results map
+    */
+  def slowSearch(queries : Map[QueryId,String]) : Map[QueryId,List[ScoredDocument]] = {
+    queries.mapValues(slowSearch(_))
+  }
+
+  /** Perform slow search on document collection without inverted index
+    *
+    * @param query        Search query string
+    * @return             Ranked search results
+    */
+  def slowSearch(query : String) : List[ScoredDocument] = {
+    println("Slow search on collection for query : "+query)
+    val tokenizedQuery : Set[Term] = Tokenizer.tokenize(query).toSet
+    rank(tokenizedQuery,index.fwIndex.filter( docTermFreq => docTermFreq._2.keySet.exists(tokenizedQuery.contains) ).keySet).take(numResults)
+  }
+
+
 
   /** Rank a set of candidate documents on tokenized query
     *

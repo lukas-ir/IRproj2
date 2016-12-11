@@ -7,7 +7,7 @@ import Typedefs._
   * search for queries and evalutes the obtained rankings
   * against a priori known relevance results.
   */
-object FastSearch {
+object Proj2 {
   val DATAPATH = "./data/documents"
   val QUERYPATH = "./data/questions-descriptions.txt"
   val JUDGEPATH = "./data/relevance-judgements.csv"
@@ -24,14 +24,14 @@ object FastSearch {
     val fraction : Double = 0.1
 
     println("***** Building Indices... *****")
-    val index = new DocIndex( DATAPATH, fraction )
+    val index = new DocIndex( Proj2.DATAPATH, fraction )
     println("***** Built indices. *****")
 
 
     // ***** Load search queries and relevance data *****
 
-    val queries = Query.load(QUERYPATH)
-    val judge : Map[QueryId,List[DocId]] = RelevanceJudge.load(JUDGEPATH)
+    val queries = Query.load(Proj2.QUERYPATH)
+    val judge : Map[QueryId,List[DocId]] = RelevanceJudge.load(Proj2.JUDGEPATH)
 
     val numSearchResults : Int = 100
 
@@ -49,18 +49,27 @@ object FastSearch {
 
     println("***** Start Language model search *****")
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
-    val lmResult = maxLhLM.search(queries)
+    val lmfResult = maxLhLM.fastSearch(queries)
+    println("***** Language model search results *****")
+    lmfResult.foreach(println)
     println("***** Language model search finished *****")
 
     // ***** Evaluate search results *****
 
     println("***** Evaluating Language model *****")
 
-    val evalSearchLm = EvaluateRanking.create(lmResult, judge)
+    val evalSearchLm = EvaluateRanking.create(lmfResult, judge)
     // evalSearchLm.judgement
 
     println("***** Evaluation of language model finished *****")
 
+
+    println("***** Language model: Start slow search *****")
+    // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
+    val lmsResult = maxLhLM.slowSearch(queries)
+    println("***** Language model: Slow search results *****")
+    lmsResult.foreach(println)
+    println("***** Language model: Slow search finished *****")
 
 
     // ***** Create term model *****
@@ -70,17 +79,29 @@ object FastSearch {
     // ***** Perform search *****
 
     println("***** Start term model search *****")
-    val tmResult = tfIdfM.search(queries)
+    val tmfResult = tfIdfM.fastSearch(queries)
+    println("***** Term model search results *****")
+    tmfResult.foreach(println)
     println("***** Term model search finished *****")
 
     // ***** Evaluate search results *****
 
     println("***** Evaluating term model model *****")
 
-    val evalSearchTM = EvaluateRanking.create(tmResult, judge)
+    val evalSearchTM = EvaluateRanking.create(tmfResult, judge)
    // evalSearchTM.judgement
 
     println("***** Evaluation of term model finished *****")
+
+
+
+    println("***** Term model: Start slow search *****")
+    val tmsResult = tfIdfM.slowSearch(queries)
+    println("***** Term model: Slow search results *****")
+    tmsResult.foreach(println)
+    println("***** Term model: Slow search finished *****")
+
+
 
   }
 
