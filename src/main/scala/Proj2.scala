@@ -33,15 +33,35 @@ class Evaluate(retrieved:Map[Int, List[String]], relevant: Map[Int, List[String]
     }
   }
 
+  val AP = {
+    retrieved.map { case (docno, _) =>
+      (docno, {
+        var patk = 0.0
+        val rele = relevant(docno)
+        val retv = retrieved(docno)
+        for (i <- 1 to retv.size) {
+          if (rele.contains(retv(i-1))) {
+            val tp = retv.slice(0, i).intersect(rele).size
+            patk += tp.toDouble / i
+          }
+        }
+        patk / (TP(docno).size + FN(docno).size)
+      })
+    }
+  }
+
+  val MAP = AP.values.sum / AP.size
+
 
   def judgement = {
     for (qnum <- relevant.keySet.toList.sorted) {
       println("Query: " + qnum)
       println("TP: "+TP(qnum).size+" FP: "+FP(qnum).size+" FN: " + FN(qnum).size)
-      println("Precision: "+Precision(qnum)+" Recall: "+Recall(qnum))
+      println("Precision: "+Precision(qnum)+" Recall: "+Recall(qnum) + " AP: " + AP(qnum))
       println(retrieved(qnum))
       println("-----------------------------------------")
     }
+    println("MAP: "+MAP)
   }
 }
 
@@ -67,13 +87,6 @@ object Proj2 {
     println("Start Predicting")
     val lmresult = querys.mapValues{lm.predict}.mapValues(_.map(_._1))
 
-
-//    println(lm.predict("Airbus Subsidies"))
-
-
-//    for (qnum <- lmresult.keySet.toList.sorted){
-//      println(qnum)
-//    }
     println("Prediction finished")
 
     val eva = new Evaluate(lmresult, judge)

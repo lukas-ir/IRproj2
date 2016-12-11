@@ -27,11 +27,12 @@ class DocIndex(filename: String){
   private def TfStream : Stream[TfTuple] = {
     var count = 0
     val in = new TipsterStream(filename)
-    in.stream.flatMap{ doc =>
-      Tokenizer.tokenize(doc.content)
-               .groupBy(identity)
+    in.stream
+      .flatMap{ doc =>
+        Tokenizer.tokenize(doc.content)
+                 .groupBy(identity)
 //               .filter(_._2.length > 3)
-               .map{case (tk,fq) => TfTuple(tk.intern(), doc.name.intern(), fq.length)}
+                 .map{case (tk,fq) => TfTuple(tk.intern(), doc.name.intern(), fq.length)}
     }
   }
 
