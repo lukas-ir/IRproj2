@@ -18,9 +18,10 @@ class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
     */
   override protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
     candidates.map(doc => ScoredDocument(
-                      doc,query.map(term => tfIdf(index.fwIndex(doc).getOrElse(term,0).toDouble,  // Document term frequency
-                                                  index.fqIndex.getOrElse(term,Map[DocId,Int]()).size.toDouble, // Per term document frequency
-                                                  index.fwIndex.size.toDouble))   // Total number of documents
+                      doc,query.filter(term => index.fwIndex(doc).contains(term))
+                               .map(term => tfIdf(index.fwIndex(doc)(term).toDouble, // Document term frequency
+                                                  index.fqIndex(term).size.toDouble, // Per term document frequency
+                                                  index.fwIndex.size.toDouble))      // Total number of documents
         .sum)).toList.sorted
   }
 
@@ -32,11 +33,13 @@ class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
     * @return                TF-IDF score
     */
   private def tfIdf(termFrequency: Double, docFrequency : Double, numDocs : Double) : Double = {
-    if (termFrequency > 0.toDouble) {
-      return TermFrequencies.log2( 1.toDouble + termFrequency ) * TermFrequencies.log2(numDocs/docFrequency)
-    } else {
-      return 0.toDouble
-    }
+    assert(termFrequency > 0.toDouble)
+    TermFrequencies.log2( 1.toDouble + termFrequency ) * TermFrequencies.log2(numDocs/docFrequency)
+//    if (termFrequency > 0.toDouble) {
+//      return TermFrequencies.log2( 1.toDouble + termFrequency ) * TermFrequencies.log2(numDocs/docFrequency)
+//    } else {
+//      return 0.toDouble
+//    }
   }
 }
 
