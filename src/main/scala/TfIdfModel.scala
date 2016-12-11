@@ -1,5 +1,4 @@
 import Typedefs._
-
 import ch.ethz.dal.tinyir.lectures.TermFrequencies
 
 
@@ -8,7 +7,7 @@ import ch.ethz.dal.tinyir.lectures.TermFrequencies
 /** Provides Tf-Idf search over Tipster collection.
   * Uses inverted index for fast retrieval
   */
-class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
+class TfIdfModel(docIndex : DocIndex, numSearchResults : Int) extends SearchEngine(docIndex, numSearchResults) {
 
   /** Ranks a set of candidate documents according to TF-IDF term-model scoring criterion
     *
@@ -19,12 +18,15 @@ class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
   override protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
     candidates.map(doc => ScoredDocument(
                       doc,query.filter(term => index.fwIndex(doc).contains(term))
-                               .map(term => tfIdf(index.fwIndex(doc)(term).toDouble, // Document term frequency
-                                                  index.fqIndex(term).size.toDouble, // Per term document frequency
-                                                  index.fwIndex.size.toDouble))      // Total number of documents
+                               .map(term => TfIdfModel.tfIdf(index.fwIndex(doc)(term), // Document term frequency
+                                                             index.fqIndex(term).size, // Per term document frequency
+                                                             index.fwIndex.size))      // Total number of documents
         .sum)).toList.sorted
   }
+}
 
+
+object TfIdfModel {
   /** The TF-IDF scoring function implementation
     *
     * @param termFrequency
@@ -32,48 +34,31 @@ class TfIdfModel(docIndex : DocIndex) extends SearchEngine(docIndex) {
     * @param numDocs
     * @return                TF-IDF score
     */
-  private def tfIdf(termFrequency: Double, docFrequency : Double, numDocs : Double) : Double = {
-    assert(termFrequency > 0.toDouble)
-    TermFrequencies.log2( 1.toDouble + termFrequency ) * TermFrequencies.log2(numDocs/docFrequency)
-//    if (termFrequency > 0.toDouble) {
-//      return TermFrequencies.log2( 1.toDouble + termFrequency ) * TermFrequencies.log2(numDocs/docFrequency)
-//    } else {
-//      return 0.toDouble
-//    }
+  def tfIdf(termFrequency: Int, docFrequency : Int, numDocs : Int) : Double = {
+    assert(termFrequency > 0 && docFrequency < numDocs)
+    TermFrequencies.log2( 1.0 + termFrequency.toDouble ) * TermFrequencies.log2(numDocs.toDouble/docFrequency.toDouble)
   }
-}
 
 
+  // ************************ Tf-Idf test function **************************
 
+  // TODO: Test set
+  def main(argv : Array[String]) = {
 
+    val log2 = (x : Double) => math.log(x)/math.log(2.0)
 
+    val exact_func = (tf:Int,df:Int,nd:Int) => log2( 1.0 + tf.toDouble ) * log2(nd.toDouble/df.toDouble)
 
-// ************************ Tf-Idf test function **************************
+    val testSet = List[(Int,Int,Int)](
+      (3,2,5),
+      (65,34,95),
+      (33,12,1115),
+      (13,24,507),
+      (32,21,7923),
+      (34,3,7))
 
-// TODO: needs to be fixed
-
-object TfIdfTest {
-  def main(argv : Array[String]) : Int = {
-
-//    val querys = Query.load(QUERYPATH)
-//
-//    val docStream = new TipsterStream(DOCUMENTPATH)
-//
-//    val docIndex : SimpleIndex = new SimpleIndex(new TipsterStream("./data/documents"))
-//
-//    val tfIdfSearch : ScoreBasedSearchEngine = new TfIdfModel(docStream, docIndex)
-//
-//    // languageModelSearch : ScoreBasedSearchEngine = new LanguageModel(docStream, docIndex)
-//
-//    // output results on queries
-//    val queryString = "Some random query words "
-//    println(queryString + " give results:")
-//    for(scoredDoc <- tfIdfSearch.search(Set("Some","random","query", "words")).take(100)) {
-//      println ("  "  + scoredDoc.id.toString + " : " + scoredDoc.score.toString)
-//    }
-//    // languageModelSearch.search(new Set[String]("Some","random","words")).take(100)
-//
-//    // TODO: Check against provided test data
-    return 0
+    assert(testSet
+      .map{ case(tf:Int,df:Int,nd:Int) => exact_func(tf,df,nd) - tfIdf(tf,df,nd) }
+      .filter(math.abs(_) > 1e-14).size == 0 )
   }
 }

@@ -37,14 +37,17 @@ object Proj2 {
     // ***** Load search queries and relevance data *****
 
     val queries = Query.load(QUERYPATH)
-    val judge = new TipsterGroundTruth(JUDGEPATH).judgements.map{case (k,v)=>(k.toInt, v.toList)}
+    val judge : Map[QueryId,List[DocId]] = RelevanceJudge.load(JUDGEPATH)
+
     val numSearchResults : Int = 100
 
+
+    // TODO: move this to extra function
 
     // ***** Create language model *****
 
     //val lm = new LanguageModel(index)
-    val maxLhLM = new NewLanguageModel(index)
+    val maxLhLM = new NewLanguageModel(index,numSearchResults)
 
     // TODO: Train ("tune") model parameters
 
@@ -52,14 +55,14 @@ object Proj2 {
 
     println("***** Start Language model search *****")
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
-    val lmResult = maxLhLM.search(queries,numSearchResults).mapValues(_.map(_.doc))
+    val lmResult = maxLhLM.search(queries)
     println("***** Language model search finished *****")
 
     // ***** Evaluate search results *****
 
     println("***** Evaluating Language model *****")
 
-    val evalSearchLm = new EvaluateRanking(lmResult, judge)
+    val evalSearchLm = EvaluateRanking.create(lmResult, judge)
     evalSearchLm.judgement
 
     println("***** Evaluation of language model finished *****")
@@ -68,22 +71,25 @@ object Proj2 {
 
     // ***** Create term model *****
 
-    val tfIdfM = new TfIdfModel(index)
+    val tfIdfM = new TfIdfModel(index,numSearchResults)
 
     // ***** Perform search *****
 
     println("***** Start term model search *****")
-    val tmResult = tfIdfM.search(queries,numSearchResults).mapValues(_.map(_.doc))
+    val tmResult = tfIdfM.search(queries)
     println("***** Term model search finished *****")
 
     // ***** Evaluate search results *****
 
     println("***** Evaluating term model model *****")
 
-    val evalSearchTM = new EvaluateRanking(tmResult, judge)
+    val evalSearchTM = EvaluateRanking.create(tmResult, judge)
     evalSearchTM.judgement
 
     println("***** Evaluation of term model finished *****")
 
   }
+
+
+
 }

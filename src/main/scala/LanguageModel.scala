@@ -44,7 +44,7 @@ class LanguageModel(index: DocIndex) {
   *
   * TODO: Cleanup of cross-dependencies on DocIndex class (move all here)
   */
-class NewLanguageModel(docIndex: DocIndex) extends SearchEngine(docIndex) {
+class NewLanguageModel(docIndex: DocIndex, numSearchResults : Int) extends SearchEngine(docIndex, numSearchResults) {
 
   override protected def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
     candidates.map(doc => (doc,index.lambdad(doc)))               /* zip document with Jelinek-Mercer smoothing parameter */
