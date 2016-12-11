@@ -18,8 +18,8 @@ class DocIndex(path: String, fraction : Double){
   private case class TfTuple(term: Term, doc : DocId, count: Int)
 
   private def tfStream : Stream[TfTuple] = {
-    //val docStream = new TipsterStream(path)
-    val docStream = new TipsterStreamSubsample(path,fraction)
+    val docStream = new TipsterStream(path)
+//    val docStream = new TipsterStreamSubsample(path,fraction)
     docStream.stream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
                .groupBy(identity)
