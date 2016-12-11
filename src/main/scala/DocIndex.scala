@@ -73,7 +73,7 @@ class DocIndex(path: String, fraction : Double){
 //  lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
   lazy val lambdad = fwIndex.map{ case (doc, tfmap) =>
     val cf = tfmap.values.sum
-    (doc, cf / (cf + fwIndex.size))
+    (doc, cf.toDouble / (cf + fwIndex.size).toDouble)
   }
 
   // TODO: Seems to be unused

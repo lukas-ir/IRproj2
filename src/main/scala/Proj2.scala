@@ -22,7 +22,7 @@ object Proj2 {
     // so it doesn't outlive long beyond index construction
 
     // Process only a fraction of the collection
-    val fraction : Double = 0.3
+    val fraction : Double = 0.1
 
     println("***** Building Indices... *****")
     val index = new DocIndex( DATAPATH, fraction )
