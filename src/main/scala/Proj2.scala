@@ -18,19 +18,14 @@ object Proj2 {
 
     // ***** Build indices *****
 
-    // TODO: make this a temporary variable so it doesn't outlive index construction
-    //val docStream = new TipsterStream(DATAPATH)
-
+    // NOTE: We construct the TipsterStream on the stack in DocIndex constructor
+    // so it doesn't outlive long beyond index construction
 
     // Process only a fraction of the collection
     val fraction : Double = 0.001
-    //val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
-    val docStreamPartition = new TipsterStreamSubsample(DATAPATH,fraction)
 
-
-    // TODO: Try to build the indices non-lazily so we can attribute performance to their construction
     println("***** Building Indices... *****")
-    val index = new DocIndex( docStreamPartition.stream )
+    val index = new DocIndex( DATAPATH, fraction )
     println("***** Built indices. *****")
 
 

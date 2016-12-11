@@ -8,16 +8,19 @@ import collection.mutable
 
 /** Provides inverted index from (preprocessed) tokens to document IDs
   *
-  * @param docStream XML stream from Tipster data set (either standard or partitioned)
+  * @param path path of the Tipster data set
+  * @param fraction share of the Tipster data set to analyze
   *
   * TODO: Instead of just aggregating huge data structures, maybe offer an interface
   */
-class DocIndex(docStream: Stream[XMLDocument]){
+class DocIndex(path: String, fraction : Double){
 
   private case class TfTuple(term: Term, doc : DocId, count: Int)
 
   private def tfStream : Stream[TfTuple] = {
-    docStream.flatMap{ doc =>
+    //val docStream = new TipsterStream(path)
+    val docStream = new TipsterStreamSubsample(path,fraction)
+    docStream.stream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
                .groupBy(identity)
 //               .filter(_._2.length > 3)
@@ -85,12 +88,10 @@ class DocIndex(docStream: Stream[XMLDocument]){
 object DocIndexTest {
   def main(args: Array[String]): Unit = {
     val fname = "./data/documents"
-    val docStream = new TipsterStream(fname)
 
     val fraction : Double = 0.1
-    val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
 
-    val docs = new DocIndex(docStreamPartition.stream)
+    val docs = new DocIndex(fname, fraction)
 
     val dist = docs.fqIndex.mapValues(_.size).groupBy(_._2).mapValues(_.map(_._1))
     for (i <- dist.keySet.toList.sorted) {

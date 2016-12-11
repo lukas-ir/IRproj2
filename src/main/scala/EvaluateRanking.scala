@@ -34,13 +34,20 @@ class EvaluateRanking(retrieved:Map[QueryId, List[ScoredDocument]], relevant: Ma
 
   val Precision : Map[QueryId, Double] = {
     TP.map{ case (qnum, tplist) =>
-      (qnum, tplist.size.toDouble / min(relevant(qnum).size, retrieved(qnum).size) )
+      (qnum,
+        if (min(relevant(qnum).size, retrieved(qnum).size) > 0)
+          tplist.size.toDouble / min(relevant(qnum).size, retrieved(qnum).size)
+        else if (retrieved(qnum).size == 0)
+          0.0
+        else /* relevant(qnum).size == 0 */
+          1.0
+        )
     }
   }
 
   val Recall : Map[QueryId, Double] = {
     TP.map{ case (qnum, tplist) =>
-      (qnum, tplist.size.toDouble / relevant(qnum).size)
+      (qnum, if (relevant(qnum).size > 0) tplist.size.toDouble / relevant(qnum).size else 1.0)
     }
   }
 
@@ -48,7 +55,10 @@ class EvaluateRanking(retrieved:Map[QueryId, List[ScoredDocument]], relevant: Ma
     case (qnum, _) => {
       val precision = Precision(qnum)
       val recall = Recall(qnum)
-      qnum -> 2.0 * precision * recall / (precision + recall)
+      if (precision == 0.0 || recall == 0.0)
+        qnum -> 0.0
+      else
+        qnum -> 2.0 * precision * recall / (precision + recall)
     }
   }
 
@@ -57,12 +67,13 @@ class EvaluateRanking(retrieved:Map[QueryId, List[ScoredDocument]], relevant: Ma
     case (qnum, retr) => {
       val precision = Precision(qnum)
       val recall = Recall(qnum)
+      assert( min(relevant(qnum).size, retr.size) > 0) /* this case needs special treatment (either AP = 1 or 0)*/
       qnum -> retr.sorted
-                  .zipWithIndex                                 /* zip with retrieved index */
+                  .zipWithIndex /* zip with retrieved index */
                   .filter(retrIndex => TP(qnum).contains(retrIndex._1.doc))
                   .sortBy(_._2)
-                  .zipWithIndex                                 /* zip with index among true positives */
-                  .map{ case (docIndex,tpIndex) => (tpIndex+1).toDouble/(docIndex._2+1).toDouble }.sum / min(relevant(qnum).size,retr.size).toDouble
+                  .zipWithIndex /* zip with index among true positives */
+                  .map { case (docIndex, tpIndex) => (tpIndex + 1).toDouble / (docIndex._2 + 1).toDouble }.sum / min(relevant(qnum).size, retr.size).toDouble
     }
   }
 
@@ -131,7 +142,8 @@ object EvaluateRanking {
         ScoredDocument("53",13.8),
         ScoredDocument("117",12.4),
         ScoredDocument("13",1.0),
-        ScoredDocument("33",0.5)))
+        ScoredDocument("33",0.5))
+    )
 
     val relevant = Map[QueryId,List[DocId]](
       1 -> List[DocId]("29","23","7","49","45"),
