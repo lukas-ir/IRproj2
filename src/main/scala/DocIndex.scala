@@ -1,52 +1,22 @@
-import ch.ethz.dal.tinyir.io.{ParsedXMLStream, TipsterStream}
+import Typedefs._
+
+import ch.ethz.dal.tinyir.io.TipsterStream
 import ch.ethz.dal.tinyir.processing.XMLDocument
 
-
-import math.ceil
 import collection.mutable
-import math.log
 
 
-
-object TipsterStreamPartition {
-
-  /** Creates a random partition of 0 to maxId
-    *
-    * @param fraction
-    * @param maxId
-    */
-  private def generatePartitionIds(maxId : Int, fraction: Double): Set[Int] = {
-    val partitionSize = ceil(fraction * maxId)
-    val resultPartition = new mutable.HashSet[Int]()
-    while (resultPartition.size < partitionSize) {
-      resultPartition += util.Random.nextInt(maxId)
-    }
-    resultPartition.toSet
-  }
-
-  def create(parentStream: TipsterStream, fraction : Double): TipsterStreamPartition = {
-    return new TipsterStreamPartition(parentStream,generatePartitionIds(parentStream.length, fraction))
-  }
-}
-
-/** Creates a partition of a TipsterSteam
+/** Provides inverted index from (preprocessed) tokens to document IDs
   *
-  * @param parentStream
-  * @param partitionIds
+  * @param docStream XML stream from Tipster data set (either standard or partitioned)
+  *
+  * TODO: Instead of just aggregating huge data structures, maybe offer an interface
   */
-case class TipsterStreamPartition(val parentStream: TipsterStream, val partitionIds : Set[Int]) {
-  def stream : Stream[XMLDocument] = parentStream.stream.zipWithIndex.filter { case (doc,id) => partitionIds(id) }.map(_._1)
-  def length : Int = partitionIds.size
-}
-
-
-
 class DocIndex(docStream: Stream[XMLDocument]){
 
-  private case class TfTuple(term: String, doc : String, count: Int)
+  private case class TfTuple(term: Term, doc : DocId, count: Int)
 
-  private def TfStream : Stream[TfTuple] = {
-    var count = 0
+  private def tfStream : Stream[TfTuple] = {
     docStream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
                .groupBy(identity)
@@ -57,26 +27,27 @@ class DocIndex(docStream: Stream[XMLDocument]){
 
 
 
-  /* token -> list of docID containing this token and its frequency */
-  lazy val fqIndex : Map[String, Map[String, Int]] = {
-    val map = mutable.Map[String, mutable.ListBuffer[(String, Int)]]()
-    for (tftuple <- TfStream) {
-      map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(String, Int)]())
+  // TODO: maybe rename fqIndex - does this abbrevation have a meaning?
+  /* Nested map: token -> (document ID containing this token ->  token frequency in this document) */
+  lazy val fqIndex : Map[Term, Map[DocId, Int]] = {
+    val map = mutable.Map[Term, mutable.ListBuffer[(DocId, Int)]]()
+    for (tftuple <- tfStream) {
+      map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(DocId, Int)]())
       map(tftuple.term) += ((tftuple.doc.intern(), tftuple.count))
     }
     map
-       .filter(_._2.size > 2) // choose terms appear in at least 3 docs
-       .filter(_._2.size < 6000)
+       .filter(_._2.size > 2) // choose terms appear in at least 3 docs FIXME: Why do we remove the most specific terms?
+       .filter(_._2.size < 6000)  // TODO: Make thsi a parameter based on the number of search results
        .mapValues(_.toMap)
        .toMap
   }
 
-  /* document -> list of tokens and its frequency */
-  lazy val fwIndex : Map[String, Map[String, Int]] = {
-    val map = mutable.Map[String, mutable.ListBuffer[(String, Int)]]()
+  /* Nested map: document -> (contained token -> token frequency in this document) */
+  lazy val fwIndex : Map[DocId, Map[Term, Int]] = {
+    val map = mutable.Map[DocId, mutable.ListBuffer[(Term, Int)]]()
     for ((tk, docfreqmap) <- fqIndex) {
       for ((doc, freq) <- docfreqmap) {
-        map.getOrElseUpdate(doc.intern(), mutable.ListBuffer[(String, Int)]())
+        map.getOrElseUpdate(doc.intern(), mutable.ListBuffer[(Term, Int)]())
         map(doc) += ((tk, freq))
       }
     }
@@ -91,6 +62,7 @@ class DocIndex(docStream: Stream[XMLDocument]){
   /* total number of tokens in the collection */
   lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
+  // TODO: Move everything to language model, what belongs there
   lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
 
   lazy val docList = fwIndex.keySet.toList
@@ -100,7 +72,11 @@ class DocIndex(docStream: Stream[XMLDocument]){
   lazy val pw = fqIndex.mapValues(_.values.sum.toDouble / ntokens)
 }
 
-object test {
+
+/** DocIndex test
+  * Currently runs with only a fraction of the full document collection
+  */
+object DocIndexTest {
   def main(args: Array[String]): Unit = {
     val fname = "./data/documents"
     val docStream = new TipsterStream(fname)
@@ -108,10 +84,7 @@ object test {
     val fraction : Double = 0.1
     val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
 
-
     val docs = new DocIndex(docStreamPartition.stream)
-
-
 
     val dist = docs.fqIndex.mapValues(_.size).groupBy(_._2).mapValues(_.map(_._1))
     for (i <- dist.keySet.toList.sorted) {

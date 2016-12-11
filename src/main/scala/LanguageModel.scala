@@ -1,6 +1,13 @@
+import Typedefs._
+
 import math.log
 
-
+/** Bag-of-words multinomial maximum likelihood language model
+  *
+  * @param index  Inverted index for fast retrieval
+  *
+  * TODO: Cleanup of cross-dependencies on DocIndex class
+  */
 class LanguageModel(index: DocIndex) {
 
   private def predictOneDoc(doc: String, qrtk: Seq[String]) = {

@@ -1,3 +1,5 @@
+import Typedefs._
+
 import ch.ethz.dal.tinyir.io.TipsterStream
 import ch.ethz.dal.tinyir.lectures.TipsterGroundTruth
 
@@ -19,11 +21,11 @@ object Proj2 {
 
     val docStream = new TipsterStream(DATAPATH)
 
-    /*
+
     // Process only a fraction of the collection
-    val fraction : Double = 0.1
+    val fraction : Double = 0.001
     val docStreamPartition = TipsterStreamPartition.create(docStream,fraction)
-    */
+
 
     // TODO: Try to build the indices non-lazily so we can attribute performance to their construction
     println("Building Indices... ")
@@ -37,7 +39,7 @@ object Proj2 {
 
     // TODO: Tf-Idf model
 
-    // TODO: Train models
+    // TODO: Train ("tune") models
 
 
     // ***** Perform search *****

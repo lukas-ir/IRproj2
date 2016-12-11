@@ -16,3 +16,15 @@ object Query {
     .grouped(2).map(q=>(q(0).toInt, q(1)))
     .toMap
 }
+
+
+
+object QueryTest {
+  def main(args: Array[String]): Unit = {
+    val queries = Query.load(Proj2.QUERYPATH)
+
+    println("Total number of queries retrieved: " + queries.size.toString)
+
+    queries.foreach(println)
+  }
+}

@@ -1,7 +1,7 @@
 import scala.math.min
 
 /** Search ranking evaluation
-  *
+  * Includes Precision, Recall, bounded average precision, mean bounded average precision
   */
 class EvaluateRanking(retrieved:Map[Int, List[String]], relevant: Map[Int, List[String]]) {
   val TP = {
@@ -33,6 +33,16 @@ class EvaluateRanking(retrieved:Map[Int, List[String]], relevant: Map[Int, List[
       (qnum, tplist.size.toDouble / min(relevant(qnum).size, 100.0))
     }
   }
+
+
+  // TODO: F1, average precision, mean average precision
+
+  // def F1 = 2.*precision*recall/(precision + recall)
+
+  // average precision average of sums of precision up to every relevant document divided by number of relevant documents
+  // get code in tinyIR
+
+  // mean average precision: query-average precision averaged over all queries
 
 
   def judgement = {
