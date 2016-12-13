@@ -8,7 +8,7 @@ import math.log
   *
   * TODO: Cleanup of cross-dependencies on DocIndex class (move all here)
   */
-class NewLanguageModel(docIndex: DocIndex, numSearchResults : Int) extends SearchEngine(docIndex, numSearchResults) {
+class LanguageModel(docIndex: DocIndex, numSearchResults : Int) extends SearchEngine(docIndex, numSearchResults) {
 
   // Witten Bell Smoothing
   val lambdad = docIndex.fwIndex.mapValues{ tfmap =>

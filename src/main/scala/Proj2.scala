@@ -50,7 +50,7 @@ object Proj2 {
     // ***** Create language model *****
 
     //val lm = new LanguageModel(index)
-    val maxLhLM = new NewLanguageModel(index,numSearchResults)
+    val maxLhLM = new LanguageModel(index,numSearchResults)
 
     // TODO: Train ("tune") model parameters
 
