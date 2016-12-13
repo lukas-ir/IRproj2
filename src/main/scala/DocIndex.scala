@@ -6,46 +6,51 @@ import ch.ethz.dal.tinyir.processing.XMLDocument
 import collection.mutable
 
 
-/** Provides inverted index from (preprocessed) tokens to document IDs
-  *
-  * @param path path of the Tipster data set
-  * @param fraction share of the Tipster data set to analyze
-  *
-  * TODO: Instead of just aggregating huge data structures, maybe offer an interface
-  */
-class DocIndex(path: String, fraction : Double){
+case class TfTuple(term: Term, doc : DocId, count: Int)
 
-  private case class TfTuple(term: Term, doc : DocId, count: Int)
-
-  private def tfStream : Stream[TfTuple] = {
+object DocIndexHelper {
+  def tfStream(path : String) : Stream[TfTuple] = {
     val docStream = new TipsterStream(path)
-//    val docStream = new TipsterStreamSubsample(path,fraction)
+    //    val docStream = new TipsterStreamSubsample(path,fraction)
     docStream.stream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
-               .groupBy(identity)
-//               .filter(_._2.length > 3)
-               .map{case (tk,fq) => TfTuple(tk.intern(), doc.name.intern(), fq.length)}
+        .groupBy(identity)
+        //               .filter(_._2.length > 3)
+        .map{case (tk,fq) => TfTuple(tk.intern(), doc.name.intern(), fq.length)}
     }
   }
 
+}
 
 
-  // TODO: maybe rename fqIndex - does this abbrevation have a meaning?
-  /* Nested map: token -> (document ID containing this token ->  token frequency in this document) */
+/** Provides both inverted and forward indices
+  *
+  * @param path path of the Tipster data set
+  * @param fraction share of the Tipster data set to analyze
+  */
+class DocIndex(path: String, fraction : Double){
+
+
+  // TODO: Rename to invIndex
+  /** Inverted index
+    * Maps token -> (document ID containing this token ->  token frequency in this document)
+    */
   val fqIndex : Map[Term, Map[DocId, Int]] = {
     val map = mutable.Map[Term, mutable.ListBuffer[(DocId, Int)]]()
-    for (tftuple <- tfStream) {
+    for (tftuple <- DocIndexHelper.tfStream(path)) {
       map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(DocId, Int)]())
       map(tftuple.term) += ((tftuple.doc.intern(), tftuple.count))
     }
     map
-       .filter(_._2.size > 2) // choose terms appear in at least 3 docs FIXME: Why do we remove the most specific terms?
-       .filter(_._2.size < 6000)  // TODO: Make thsi a parameter based on the number of search results
+       .filter(_._2.size > 2) // choose terms appear in at least 3 docs
+       .filter(_._2.size < 6000)
        .mapValues(_.toMap)
        .toMap
   }
 
-  /* Nested map: document -> (contained token -> token frequency in this document) */
+  /** Forward index
+    * Maps document -> (contained token -> token frequency in this document)
+    */
   val fwIndex : Map[DocId, Map[Term, Int]] = {
     val map = mutable.Map[DocId, mutable.ListBuffer[(Term, Int)]]()
     for ((tk, docfreqmap) <- fqIndex) {
@@ -59,6 +64,19 @@ class DocIndex(path: String, fraction : Double){
         .toMap
   }
 
+  /** TODO: Map to word-frequency and collection frequency
+    */
+  case class DfCfTuple(val df : Int, val cf : Int)
+
+  val dcInvIndex : Map[Term,DfCfTuple] =
+    fqIndex.mapValues( docFreqMap => DfCfTuple(docFreqMap.size,docFreqMap.foldLeft(0)(_ + _._2)) )
+
+
+  //************************************************************
+
+  // TODO: Everything below here should be removed and replaced by calls to the above three indices...
+
+  //************************************************************
 
 
   // TODO: Consider moving to language model
