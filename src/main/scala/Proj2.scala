@@ -13,21 +13,23 @@ object Proj2 {
   val QUERYPATH = "./data/questions-descriptions.txt"
   val JUDGEPATH = "./data/relevance-judgements.csv"
 
+  val numSearchResultsReqested = 100
+
 
 
   def printOutResult(index: DocIndex, result: Map[QueryId, List[ScoredDocument]]): Unit = {
-    val numSearchResultsRequested : Int = 100
+    val numSearchResultsReq : Int = numSearchResultsReqested
 
     result.toList.sortBy(_._1).foreach{ case (qnum, resultlist) =>
-      val finallist = if (resultlist.size < numSearchResultsRequested) resultlist.map(_.doc) ++ index.fillerDocs.take(numSearchResultsRequested-resultlist.size) else resultlist
+      val finallist = if (resultlist.size < numSearchResultsReq) resultlist.map(_.doc) ++ index.fillerDocs.take(numSearchResultsReq-resultlist.size) else resultlist
 
       for( i <- 1 to finallist.size) {
         println(qnum + " " + i + " " + finallist(i-1))
       }
     }
 
-    println("Queries with less than " + numSearchResultsRequested +" returned results from relevance model: " + result.filter(_._2.size < numSearchResultsRequested).size)
-    result.filter(_._2.size < numSearchResultsRequested).foreach{ case (query,rankedList) => println(query + " : " + rankedList.size + " results.") }
+    println("Queries with less than " + numSearchResultsReq +" returned results from relevance model: " + result.filter(_._2.size < numSearchResultsReq).size)
+    result.filter(_._2.size < numSearchResultsReq).foreach{ case (query,rankedList) => println(query + " : " + rankedList.size + " results.") }
   }
 
   def main(args: Array[String]): Unit = {
@@ -37,7 +39,7 @@ object Proj2 {
     // Process only a fraction of the collection (used for rapid prototyping)
     val fraction : Double = 0.2
 
-    val numSearchResults : Int = 100
+    val numSearchResults : Int = numSearchResultsReqested
 
     println("***** Building Indices... *****")
     val tBeforeIndexConstruction = System.nanoTime();
