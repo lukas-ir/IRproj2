@@ -27,11 +27,13 @@ object Proj2 {
     // so it doesn't outlive long beyond index construction
 
     // Process only a fraction of the collection
-    val fraction : Double = 0.1
+    val fraction : Double = 0.2
+
+    val numSearchResults : Int = 100
 
     println("***** Building Indices... *****")
     val tBeforeIndexConstruction = System.nanoTime();
-    val index = new DocIndex( Proj2.DATAPATH, fraction )
+    val index = new DocIndex( Proj2.DATAPATH, numSearchResults, fraction )
     val tAfterIndexConstruction = System.nanoTime();
     val tIndexConstruction = (tAfterIndexConstruction-tBeforeIndexConstruction).toDouble/1e6
     println("***** Built indices (" + tIndexConstruction + " ms) *****")
@@ -41,8 +43,6 @@ object Proj2 {
 
     val queries = Query.load(Proj2.QUERYPATH)
     val judge : Map[QueryId,List[DocId]] = RelevanceJudge.load(Proj2.JUDGEPATH)
-
-    val numSearchResults : Int = 100
 
 
     // TODO: move this to extra function
@@ -56,16 +56,17 @@ object Proj2 {
 
     // ***** Perform search *****
 
-    println("***** Start Language model search *****")
+    println("***** Language model: Start fast search *****")
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
     val tBeforeLMFastSearch = System.nanoTime();
     val lmfResult = maxLhLM.fastSearch(queries)
-    println("***** Language model search results *****")
+    println("***** Language model: Number of fast search results: ******")
+    lmfResult.foreach{ case (query,rankedList) => println(query + " : " + rankedList.length ) }
 //    lmfResult.foreach(println)
-    printOutResult(lmfResult)
+//    printOutResult(lmfResult)
     val tAfterLMFastSearch = System.nanoTime();
     val tLMFastSearch = (tAfterLMFastSearch - tBeforeLMFastSearch ).toDouble/1e6
-    println("***** Language model search finished (" + tLMFastSearch + " ms) *****")
+    println("***** Language model: Fast search finished (" + tLMFastSearch + " ms) *****")
 
 //    // ***** Evaluate search results *****
 //
@@ -78,9 +79,9 @@ object Proj2 {
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
     val tBeforeLMSlowSearch = System.nanoTime();
     val lmsResult = maxLhLM.slowSearch(queries)
-    println("***** Language model: Slow search results *****")
+    println("***** Language model: Number of slow search results: "+lmsResult.size)
 //    lmsResult.foreach(println)
-    printOutResult(lmsResult)
+//    printOutResult(lmsResult)
     val tAfterLMSlowSearch = System.nanoTime();
     val tLMSlowSearch = (tAfterLMSlowSearch - tBeforeLMSlowSearch ).toDouble/1e6
     println("***** Language model: Slow search finished (" + tLMSlowSearch + " ms) *****")
@@ -92,12 +93,13 @@ object Proj2 {
 
     // ***** Perform search *****
 
-    println("***** Start term model search *****")
+    println("***** Term model: Start search *****")
     val tBeforeTMFastSearch = System.nanoTime();
     val tmfResult = tfIdfM.fastSearch(queries)
-    println("***** Term model search results *****")
+    println("***** Term model: Number of fast search results: ******")
+    tmfResult.foreach{ case (query,rankedList) => println(query + " : " + rankedList.length ) }
 //    tmfResult.foreach(println)
-    printOutResult(tmfResult)
+//    printOutResult(tmfResult)
     val tAfterTMFastSearch = System.nanoTime();
     val tTMFastSearch = (tAfterTMFastSearch - tBeforeTMFastSearch ).toDouble/1e6
     println("***** Term model search finished (" + tTMFastSearch + " ms) *****")
@@ -114,9 +116,9 @@ object Proj2 {
     println("***** Term model: Start slow search *****")
     val tBeforeTMSlowSearch = System.nanoTime();
     val tmsResult = tfIdfM.slowSearch(queries)
-    println("***** Term model: Slow search results *****")
+    println("***** Term model: Number of slow search results: "+tmsResult.size)
 //    tmsResult.foreach(println)
-    printOutResult(tmsResult)
+//    printOutResult(tmsResult)
     val tAfterTMSlowSearch = System.nanoTime();
     val tTMSlowSearch = (tAfterTMSlowSearch - tBeforeTMSlowSearch).toDouble/1e6
     println("***** Term model: Slow search finished (" + tTMSlowSearch + " ms) *****")

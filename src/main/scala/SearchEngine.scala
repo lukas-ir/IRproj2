@@ -68,6 +68,8 @@ abstract class SearchEngine(docIndex : DocIndex, numSearchResults : Int) {
     * @return            Ranked list of documents with scores
     */
   private def rank(query : Set[Term], candidates : Set[DocId]) : List[ScoredDocument] = {
+    if (candidates.size < 100)
+      println("Performing ranking on less than 100 models for query : "+query)
     candidates.map(doc => ScoredDocument( doc.intern(),score(query,doc) ) ).toList.sorted
   }
 

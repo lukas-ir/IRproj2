@@ -13,11 +13,11 @@ import collection.mutable
   * @param path path of the Tipster data set
   * @param fraction share of the Tipster data set to analyze
   */
-class DocIndex(path: String, fraction : Double){
+class DocIndex(path: String, numFillerDocs : Int, fraction : Double){
   private case class TfTuple(term: Term, doc : DocId, count: Int)
   private def tfStream(path : String) : Stream[TfTuple] = {
-    val docStream = new TipsterStream(path)
-    //    val docStream = new TipsterStreamSubsample(path,fraction)
+    //val docStream = new TipsterStream(path)
+    val docStream = new TipsterStreamSubsample(path,fraction)
     docStream.stream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
         .groupBy(identity)
@@ -60,14 +60,34 @@ class DocIndex(path: String, fraction : Double){
         .toMap
   }
 
-  /** TODO: Map to word-frequency and collection frequency
-    */
-  case class DfCfTuple(val df : Int, val cf : Int)
+//  case class DfCfTuple(val df : Int, val cf : Int)
 
-  val dcInvIndex : Map[Term,DfCfTuple] =
-    fqIndex.mapValues( docFreqMap => DfCfTuple(docFreqMap.size,docFreqMap.foldLeft(0)(_ + _._2)) )
+  /** Inverted index mapping terms to collection frequencies
+    */
+  val cfInvIndex : Map[Term,Int/*DfCfTuple*/] =
+    fqIndex.mapValues( docFreqMap => /*DfCfTuple(docFreqMap.size,*/docFreqMap.foldLeft(0)(_ + _._2)) /*)*/
+
+
+//  /** Forward index mapping a document to its total number of tokens
+//    */
+//  val fwNumTokensIndex : Map[Term,Int] = fwIndex.mapValues(_.values.sum)
+
+  val cumNumTokens : Int = cfInvIndex.values.foldLeft(0)(_ + _)
+
+  // Witten Bell smoothing parameter (used for relevance ranking to complete search results with too few returned documents)
+  val lmLambdaD : Map[DocId,Double] = fwIndex.mapValues(
+    tfMap => {
+      val numTokens = tfMap.values.sum.toDouble
+      numTokens / (numTokens + tfMap.size.toDouble)
+    })
+
+  // Filler documents (used for relevance ranking to complete search results with too few returned documents)
+  // Ranking according to top results for language model on empty query
+  val fillerDocs : List[DocId] = lmLambdaD.toList.sortBy(-_._2).map(_._1).take(numFillerDocs)
 
 }
+
+
 
 
 /** DocIndex test
@@ -79,7 +99,7 @@ object DocIndexTest {
 
     val fraction : Double = 0.1
 
-    val docs = new DocIndex(fname, fraction)
+    val docs = new DocIndex(fname, 100, fraction)
 
     val dist = docs.fqIndex.mapValues(_.size).groupBy(_._2).mapValues(_.map(_._1))
     for (i <- dist.keySet.toList.sorted) {
