@@ -11,7 +11,13 @@ object Proj2 {
   val DATAPATH = "./data/documents"
   val QUERYPATH = "./data/questions-descriptions.txt"
   val JUDGEPATH = "./data/relevance-judgements.csv"
-
+  def printOutResult(result: Map[QueryId, List[ScoredDocument]]): Unit = {
+    result.toList.sortBy(_._1).map{ case (qnum, resultlist) =>
+      for( i <- 0 to 99) {
+        println(qnum + " " + i + " " + resultlist(i))
+      }
+    }
+  }
 
   def main(args: Array[String]): Unit = {
 
