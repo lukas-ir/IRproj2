@@ -60,15 +60,12 @@ object Proj2 {
     val tLMFastSearch = (tAfterLMFastSearch - tBeforeLMFastSearch ).toDouble/1e6
     println("***** Language model search finished (" + tLMFastSearch + " ms) *****")
 
-    // ***** Evaluate search results *****
-
-    println("***** Evaluating Language model *****")
-
-    val evalSearchLm = EvaluateRanking.create(lmfResult, judge)
-    // evalSearchLm.judgement
-
-    println("***** Evaluation of language model finished *****")
-
+//    // ***** Evaluate search results *****
+//
+//    println("***** Evaluating Language model *****")
+//    val evalSearchLm = EvaluateRanking.create(lmfResult, judge)
+//    // evalSearchLm.judgement
+//    println("***** Evaluation of language model finished *****")
 
     println("***** Language model: Start slow search *****")
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
@@ -97,15 +94,12 @@ object Proj2 {
     println("***** Term model search finished (" + tTMFastSearch + " ms) *****")
 
 
-    // ***** Evaluate search results *****
-
-    println("***** Evaluating term model model *****")
-
-    val evalSearchTM = EvaluateRanking.create(tmfResult, judge)
-   // evalSearchTM.judgement
-
-    println("***** Evaluation of term model finished *****")
-
+//    // ***** Evaluate search results *****
+//
+//    println("***** Evaluating term model model *****")
+//    val evalSearchTM = EvaluateRanking.create(tmfResult, judge)
+//   // evalSearchTM.judgement
+//    println("***** Evaluation of term model finished *****")
 
 
     println("***** Term model: Start slow search *****")
