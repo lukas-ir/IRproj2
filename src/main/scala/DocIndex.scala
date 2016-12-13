@@ -6,10 +6,16 @@ import ch.ethz.dal.tinyir.processing.XMLDocument
 import collection.mutable
 
 
-case class TfTuple(term: Term, doc : DocId, count: Int)
 
-object DocIndexHelper {
-  def tfStream(path : String) : Stream[TfTuple] = {
+
+/** Provides both inverted and forward indices
+  *
+  * @param path path of the Tipster data set
+  * @param fraction share of the Tipster data set to analyze
+  */
+class DocIndex(path: String, fraction : Double){
+  private case class TfTuple(term: Term, doc : DocId, count: Int)
+  private def tfStream(path : String) : Stream[TfTuple] = {
     val docStream = new TipsterStream(path)
     //    val docStream = new TipsterStreamSubsample(path,fraction)
     docStream.stream.flatMap{ doc =>
@@ -20,16 +26,6 @@ object DocIndexHelper {
     }
   }
 
-}
-
-
-/** Provides both inverted and forward indices
-  *
-  * @param path path of the Tipster data set
-  * @param fraction share of the Tipster data set to analyze
-  */
-class DocIndex(path: String, fraction : Double){
-
 
   // TODO: Rename to invIndex
   /** Inverted index
@@ -37,7 +33,7 @@ class DocIndex(path: String, fraction : Double){
     */
   val fqIndex : Map[Term, Map[DocId, Int]] = {
     val map = mutable.Map[Term, mutable.ListBuffer[(DocId, Int)]]()
-    for (tftuple <- DocIndexHelper.tfStream(path)) {
+    for (tftuple <- tfStream(path)) {
       map.getOrElseUpdate(tftuple.term, mutable.ListBuffer[(DocId, Int)]())
       map(tftuple.term) += ((tftuple.doc.intern(), tftuple.count))
     }
