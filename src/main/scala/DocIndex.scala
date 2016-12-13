@@ -60,7 +60,7 @@ class DocIndex(path: String, fraction : Double){
         .toMap
   }
 
-  /** TODO: Map to word-frequency and collection frequency
+  /** Map to word-frequency and collection frequency
     */
   case class DfCfTuple(val df : Int, val cf : Int)
 

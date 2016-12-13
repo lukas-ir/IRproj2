@@ -20,7 +20,7 @@ class NewLanguageModel(docIndex: DocIndex, numSearchResults : Int) extends Searc
 
   val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
-  val pw = docIndex.fqIndex
+  val pws = docIndex.fqIndex
                         .mapValues(_.values.sum.toDouble / ntokens)
 
   override def score(query : Set[Term], doc : DocId) : Double = {
@@ -28,7 +28,7 @@ class NewLanguageModel(docIndex: DocIndex, numSearchResults : Int) extends Searc
     query.intersect(index.fwIndex(doc).keySet)                    /* get query tokens occuring in document */
                  .map { word =>
                    val pwd = index.fwIndex(doc)(word).toDouble / ntokensdoc(doc) /* query token frequency divided by total number of tokens in document */
-                   val pw = pw(word)                              /* relative collection frequency of query token */
+                   val pw = pws(word)                              /* relative collection frequency of query token */
                    log(1 + (1 - lmbd) / lmbd * pwd / pw)          /* query-token dependent contribution to document score */
                  }.sum + log(lmbd)                                /* document-dependent Jelinek-Mercer smoothing parameter */
   }
