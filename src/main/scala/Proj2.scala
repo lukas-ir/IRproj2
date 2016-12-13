@@ -1,5 +1,6 @@
 import Typedefs._
 import math.min
+import collection.mutable
 
 /** Main object of this application.
   * Constructs an inverted and forward index used to build
@@ -11,22 +12,29 @@ object Proj2 {
   val DATAPATH = "./data/documents"
   val QUERYPATH = "./data/questions-descriptions.txt"
   val JUDGEPATH = "./data/relevance-judgements.csv"
-  def printOutResult(result: Map[QueryId, List[ScoredDocument]]): Unit = {
-    result.toList.sortBy(_._1).map{ case (qnum, resultlist) =>
-      for( i <- 1 to min(resultlist.size,100)) {
-        println(qnum + " " + i + " " + resultlist(i-1).doc)
+
+
+
+  def printOutResult(index: DocIndex, result: Map[QueryId, List[ScoredDocument]]): Unit = {
+    val numSearchResultsRequested : Int = 100
+
+    result.toList.sortBy(_._1).foreach{ case (qnum, resultlist) =>
+      val finallist = if (resultlist.size < numSearchResultsRequested) resultlist.map(_.doc) ++ index.fillerDocs.take(numSearchResultsRequested-resultlist.size) else resultlist
+
+      for( i <- 1 to finallist.size) {
+        println(qnum + " " + i + " " + finallist(i-1))
       }
     }
+
+    println("Queries with less than " + numSearchResultsRequested +" returned results from relevance model: " + result.filter(_._2.size < numSearchResultsRequested).size)
+    result.filter(_._2.size < numSearchResultsRequested).foreach{ case (query,rankedList) => println(query + " : " + rankedList.size + " results.") }
   }
 
   def main(args: Array[String]): Unit = {
 
     // ***** Build indices *****
 
-    // NOTE: We construct the TipsterStream on the stack in DocIndex constructor
-    // so it doesn't outlive long beyond index construction
-
-    // Process only a fraction of the collection
+    // Process only a fraction of the collection (used for rapid prototyping)
     val fraction : Double = 0.2
 
     val numSearchResults : Int = 100
@@ -45,14 +53,11 @@ object Proj2 {
     val judge : Map[QueryId,List[DocId]] = RelevanceJudge.load(Proj2.JUDGEPATH)
 
 
-    // TODO: move this to extra function
-
     // ***** Create language model *****
 
     //val lm = new LanguageModel(index)
     val maxLhLM = new LanguageModel(index,numSearchResults)
 
-    // TODO: Train ("tune") model parameters
 
     // ***** Perform search *****
 
@@ -60,28 +65,29 @@ object Proj2 {
     // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
     val tBeforeLMFastSearch = System.nanoTime();
     val lmfResult = maxLhLM.fastSearch(queries)
-    println("***** Language model: Number of fast search results: ******")
-    lmfResult.foreach{ case (query,rankedList) => println(query + " : " + rankedList.length ) }
+//    println("***** Language model: Number of fast search results: ******")
+//    lmfResult.foreach{ case (query,rankedList) => println(query + " : " + rankedList.length ) }
 //    lmfResult.foreach(println)
-//    printOutResult(lmfResult)
+    println("***** Language model: Fast search results *****")
+    printOutResult(index, lmfResult)
     val tAfterLMFastSearch = System.nanoTime();
     val tLMFastSearch = (tAfterLMFastSearch - tBeforeLMFastSearch ).toDouble/1e6
     println("***** Language model: Fast search finished (" + tLMFastSearch + " ms) *****")
 
-//    // ***** Evaluate search results *****
-//
-//    println("***** Evaluating Language model *****")
-//    val evalSearchLm = EvaluateRanking.create(lmfResult, judge)
-//    // evalSearchLm.judgement
-//    println("***** Evaluation of language model finished *****")
+    // ***** Evaluate search results *****
+
+    println("***** Evaluating Language model *****")
+    val evalSearchLm = EvaluateRanking.create(lmfResult, judge)
+    evalSearchLm.judgement
+    println("***** Evaluation of language model finished *****")
 
     println("***** Language model: Start slow search *****")
-    // val lmresult = queries.mapValues{lm.predict}.mapValues(_.map(_._1))
     val tBeforeLMSlowSearch = System.nanoTime();
     val lmsResult = maxLhLM.slowSearch(queries)
-    println("***** Language model: Number of slow search results: "+lmsResult.size)
+//    println("***** Language model: Number of slow search results: "+lmsResult.size)
 //    lmsResult.foreach(println)
-//    printOutResult(lmsResult)
+    println("***** Language model: Slow search results *****")
+    printOutResult(index, lmsResult)
     val tAfterLMSlowSearch = System.nanoTime();
     val tLMSlowSearch = (tAfterLMSlowSearch - tBeforeLMSlowSearch ).toDouble/1e6
     println("***** Language model: Slow search finished (" + tLMSlowSearch + " ms) *****")
@@ -96,29 +102,31 @@ object Proj2 {
     println("***** Term model: Start search *****")
     val tBeforeTMFastSearch = System.nanoTime();
     val tmfResult = tfIdfM.fastSearch(queries)
-    println("***** Term model: Number of fast search results: ******")
-    tmfResult.foreach{ case (query,rankedList) => println(query + " : " + rankedList.length ) }
+//    println("***** Term model: Number of fast search results: ******")
+//    tmfResult.foreach{ case (query,rankedList) => println(query + " : " + rankedList.length ) }
 //    tmfResult.foreach(println)
-//    printOutResult(tmfResult)
+    println("***** Term model: Fast search results *****")
+    printOutResult(index, tmfResult)
     val tAfterTMFastSearch = System.nanoTime();
     val tTMFastSearch = (tAfterTMFastSearch - tBeforeTMFastSearch ).toDouble/1e6
     println("***** Term model search finished (" + tTMFastSearch + " ms) *****")
 
 
-//    // ***** Evaluate search results *****
-//
-//    println("***** Evaluating term model model *****")
-//    val evalSearchTM = EvaluateRanking.create(tmfResult, judge)
-//   // evalSearchTM.judgement
-//    println("***** Evaluation of term model finished *****")
+    // ***** Evaluate search results *****
+
+    println("***** Evaluating term model model *****")
+    val evalSearchTM = EvaluateRanking.create(tmfResult, judge)
+    evalSearchTM.judgement
+    println("***** Evaluation of term model finished *****")
 
 
     println("***** Term model: Start slow search *****")
     val tBeforeTMSlowSearch = System.nanoTime();
     val tmsResult = tfIdfM.slowSearch(queries)
-    println("***** Term model: Number of slow search results: "+tmsResult.size)
+//    println("***** Term model: Number of slow search results: "+tmsResult.size)
 //    tmsResult.foreach(println)
-//    printOutResult(tmsResult)
+    println("***** Term model: Slow search results *****")
+    printOutResult(index, tmsResult)
     val tAfterTMSlowSearch = System.nanoTime();
     val tTMSlowSearch = (tAfterTMSlowSearch - tBeforeTMSlowSearch).toDouble/1e6
     println("***** Term model: Slow search finished (" + tTMSlowSearch + " ms) *****")

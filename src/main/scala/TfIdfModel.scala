@@ -41,7 +41,6 @@ object TfIdfModel {
 
   // ************************ Tf-Idf test function **************************
 
-  // TODO: Test set
   def main(argv : Array[String]) = {
 
     val log2 = (x : Double) => math.log(x)/math.log(2.0)

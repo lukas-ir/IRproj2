@@ -80,31 +80,6 @@ class EvaluateRanking(retrieved:Map[QueryId, List[ScoredDocument]], relevant: Ma
   // Query-mean average precision
   val MAP : Double = AP.foldLeft(0.0)( _ + _._2 ) / AP.size.toDouble
 
-  /* // Yi's implementation
-  val AP = {
-    retrieved.map { case (qnum, _) =>
-      (qnum, {
-        var patk = 0.0
-        val rele = relevant(qnum)
-        val retv = retrieved(qnum)
-        for (i <- 1 to retv.size) {
-          if (rele.contains(retv(i-1))) {
-            val tp = retv.slice(0, i).intersect(rele).size
-            patk += tp.toDouble / i
-          }
-        }
-        patk / (TP(qnum).size + FN(qnum).size)
-      })
-    }
-  }
-
-  val MAP = AP.values.sum / AP.size
-
-  val F1 = Precision.map{ case (qnum, pr) =>
-    val rc = Recall(qnum)
-    (qnum, 2.0 * pr * rc / (pr + rc))
-  }
-  */
 
   val judgement = {
     for (qnum <- relevant.keySet.toList.sorted) {
@@ -123,7 +98,7 @@ class EvaluateRanking(retrieved:Map[QueryId, List[ScoredDocument]], relevant: Ma
 
 object EvaluateRanking {
   def create(searchResults : Map[QueryId,List[ScoredDocument]], judge : Map[QueryId,List[DocId]]) : EvaluateRanking = {
-    new EvaluateRanking(searchResults/*.mapValues(_.map(_.doc))*/,judge) // TODO: Check that this list is not reordered
+    new EvaluateRanking(searchResults,judge)
   }
 
   def main(args : Array[String]) = {

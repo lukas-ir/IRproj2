@@ -16,8 +16,8 @@ import collection.mutable
 class DocIndex(path: String, numFillerDocs : Int, fraction : Double){
   private case class TfTuple(term: Term, doc : DocId, count: Int)
   private def tfStream(path : String) : Stream[TfTuple] = {
-    //val docStream = new TipsterStream(path)
-    val docStream = new TipsterStreamSubsample(path,fraction)
+    val docStream = new TipsterStream(path)
+    //val docStream = new TipsterStreamSubsample(path,fraction)
     docStream.stream.flatMap{ doc =>
       Tokenizer.tokenize(doc.content)
         .groupBy(identity)
@@ -27,7 +27,6 @@ class DocIndex(path: String, numFillerDocs : Int, fraction : Double){
   }
 
 
-  // TODO: Rename to invIndex
   /** Inverted index
     * Maps token -> (document ID containing this token ->  token frequency in this document)
     */
@@ -60,17 +59,11 @@ class DocIndex(path: String, numFillerDocs : Int, fraction : Double){
         .toMap
   }
 
-//  case class DfCfTuple(val df : Int, val cf : Int)
-
   /** Inverted index mapping terms to collection frequencies
     */
-  val cfInvIndex : Map[Term,Int/*DfCfTuple*/] =
-    fqIndex.mapValues( docFreqMap => /*DfCfTuple(docFreqMap.size,*/docFreqMap.foldLeft(0)(_ + _._2)) /*)*/
+  val cfInvIndex : Map[Term,Int] =
+    fqIndex.mapValues( docFreqMap => docFreqMap.foldLeft(0)(_ + _._2))
 
-
-//  /** Forward index mapping a document to its total number of tokens
-//    */
-//  val fwNumTokensIndex : Map[Term,Int] = fwIndex.mapValues(_.values.sum)
 
   val cumNumTokens : Int = cfInvIndex.values.foldLeft(0)(_ + _)
 

@@ -32,7 +32,7 @@ abstract class SearchEngine(docIndex : DocIndex, numSearchResults : Int) {
     * @return             Ranked search results
     */
   def fastSearch(query : String) : List[ScoredDocument] = {
-    println("Fast search on collection for query : "+query)
+    //println("Fast search on collection for query : "+query)
     val tokenizedQuery : Set[Term] = Tokenizer.tokenize(query).toSet
     rank(tokenizedQuery,tokenizedQuery.flatMap(
       term => index.fqIndex.getOrElse(term,Map[DocId,Int]()).keySet)).take(numResults)
@@ -54,7 +54,7 @@ abstract class SearchEngine(docIndex : DocIndex, numSearchResults : Int) {
     * @return             Ranked search results
     */
   def slowSearch(query : String) : List[ScoredDocument] = {
-    println("Slow search on collection for query : "+query)
+    //println("Slow search on collection for query : "+query)
     val tokenizedQuery : Set[Term] = Tokenizer.tokenize(query).toSet
     rank(tokenizedQuery,index.fwIndex.filter( docTermFreq => docTermFreq._2.keySet.exists(tokenizedQuery.contains) ).keySet).take(numResults)
   }
