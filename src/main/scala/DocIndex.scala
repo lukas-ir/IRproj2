@@ -67,22 +67,6 @@ class DocIndex(path: String, fraction : Double){
   val dcInvIndex : Map[Term,DfCfTuple] =
     fqIndex.mapValues( docFreqMap => DfCfTuple(docFreqMap.size,docFreqMap.foldLeft(0)(_ + _._2)) )
 
-
-  //************************************************************
-
-  // TODO: Everything below here should be removed and replaced by calls to the above three indices...
-
-  //************************************************************
-
-
-  // TODO: Consider moving to language model
-  /* doc -> ntoken of this doc*/
-
-  /* total number of tokens in the collection */
-//  lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
-
-
-  // TODO: Consider moving to language model
 }
 
 
