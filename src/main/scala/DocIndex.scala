@@ -77,27 +77,12 @@ class DocIndex(path: String, fraction : Double){
 
   // TODO: Consider moving to language model
   /* doc -> ntoken of this doc*/
-  lazy val ntokensdoc = fwIndex.mapValues(_.values.sum)
 
   /* total number of tokens in the collection */
-  lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
+//  lazy val ntokens = ntokensdoc.foldLeft(0)(_ + _._2)
 
-  // TODO: Move everything to language model, what belongs there
-  // Witten Bell Smoothing
-//  lazy val lambdad = ntokensdoc.mapValues(1/_.toDouble)
-  lazy val lambdad = fwIndex.map{ case (doc, tfmap) =>
-    val cf = tfmap.values.sum
-    (doc, cf.toDouble / (cf + fwIndex(doc).size).toDouble)
-  }
-
-  // TODO: Seems to be unused
-  lazy val docList = fwIndex.keySet.toList
-
-  // TODO: Seems to be unused
-  lazy val vocab = fqIndex.keySet.toList
 
   // TODO: Consider moving to language model
-  lazy val pw = fqIndex.mapValues(_.values.sum.toDouble / ntokens)
 }
 
 
