@@ -1,4 +1,18 @@
 
 
+Document data should be put into data/documents directory, queries and relevance data should be put in data/ directory.
+The project structure looks like this
+
+/root/path/of/program
+|-- data
+|   |-- documents
+|   |   |-- documents.zip
+|   |-- questions-descriptions.txt
+|   |-- relevance-judgements.csv
+|   |-- test-questions.txt
+|-- lib
+|-- src
+|-- pom.xml
+
 We run our program in IntelliJ with Maven. The result is printed out to standard output and can be redirected to any files.
 
