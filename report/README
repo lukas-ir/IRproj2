@@ -1,0 +1,4 @@
+
+
+We run our program in IntelliJ with Maven. The result is printed out to standard output and can be redirected to any files.
+
