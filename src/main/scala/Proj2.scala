@@ -1,5 +1,5 @@
 import Typedefs._
-
+import math.min
 
 /** Main object of this application.
   * Constructs an inverted and forward index used to build
@@ -13,8 +13,8 @@ object Proj2 {
   val JUDGEPATH = "./data/relevance-judgements.csv"
   def printOutResult(result: Map[QueryId, List[ScoredDocument]]): Unit = {
     result.toList.sortBy(_._1).map{ case (qnum, resultlist) =>
-      for( i <- 0 to 99) {
-        println(qnum + " " + i + " " + resultlist(i))
+      for( i <- 1 to min(resultlist.size,100)) {
+        println(qnum + " " + i + " " + resultlist(i-1).doc)
       }
     }
   }
@@ -61,7 +61,8 @@ object Proj2 {
     val tBeforeLMFastSearch = System.nanoTime();
     val lmfResult = maxLhLM.fastSearch(queries)
     println("***** Language model search results *****")
-    lmfResult.foreach(println)
+//    lmfResult.foreach(println)
+    printOutResult(lmfResult)
     val tAfterLMFastSearch = System.nanoTime();
     val tLMFastSearch = (tAfterLMFastSearch - tBeforeLMFastSearch ).toDouble/1e6
     println("***** Language model search finished (" + tLMFastSearch + " ms) *****")
@@ -78,7 +79,8 @@ object Proj2 {
     val tBeforeLMSlowSearch = System.nanoTime();
     val lmsResult = maxLhLM.slowSearch(queries)
     println("***** Language model: Slow search results *****")
-    lmsResult.foreach(println)
+//    lmsResult.foreach(println)
+    printOutResult(lmsResult)
     val tAfterLMSlowSearch = System.nanoTime();
     val tLMSlowSearch = (tAfterLMSlowSearch - tBeforeLMSlowSearch ).toDouble/1e6
     println("***** Language model: Slow search finished (" + tLMSlowSearch + " ms) *****")
@@ -94,7 +96,8 @@ object Proj2 {
     val tBeforeTMFastSearch = System.nanoTime();
     val tmfResult = tfIdfM.fastSearch(queries)
     println("***** Term model search results *****")
-    tmfResult.foreach(println)
+//    tmfResult.foreach(println)
+    printOutResult(tmfResult)
     val tAfterTMFastSearch = System.nanoTime();
     val tTMFastSearch = (tAfterTMFastSearch - tBeforeTMFastSearch ).toDouble/1e6
     println("***** Term model search finished (" + tTMFastSearch + " ms) *****")
@@ -112,7 +115,8 @@ object Proj2 {
     val tBeforeTMSlowSearch = System.nanoTime();
     val tmsResult = tfIdfM.slowSearch(queries)
     println("***** Term model: Slow search results *****")
-    tmsResult.foreach(println)
+//    tmsResult.foreach(println)
+    printOutResult(tmsResult)
     val tAfterTMSlowSearch = System.nanoTime();
     val tTMSlowSearch = (tAfterTMSlowSearch - tBeforeTMSlowSearch).toDouble/1e6
     println("***** Term model: Slow search finished (" + tTMSlowSearch + " ms) *****")
